@@ -8,8 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
+
+import static com.example.Signal.Utils.commandRunner;
 
 @Slf4j
 @Service
@@ -29,14 +30,9 @@ public class SignalDataService {
         groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
             @Override
             public void callbackWithGroupId(String groupId) {
+//                invokeRoute("/Signal/Chat", params = {"groupId", groupId}); // localhost:8080/Signal/Chat&groupid={groupid}
                 List<GroupchatMessage> groupies = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
-                int cnt = 0;
-                for (GroupchatMessage group : groupies) {
-                    log.info(group.toString());
-                    if (++cnt == 10) {
-                        break;
-                    }
-                }
+                extractWordleScores(groupies);
             }
         });
     }
@@ -49,21 +45,20 @@ public class SignalDataService {
         String command = String.format("sed s/INSERTHERE/%s/ unencryptDB-template.sql > unencryptDB.sql", decryptionKey);
         commandRunner(command);
 
-        // 2nd execute sql file to create plaintext.db
+        // 2nd execute sql file IN SQLCIPHER to create plaintext.db
         command = String.format("sqlcipher %s < unencryptDB.sql", fileName);
         commandRunner(command);
 
         return "plaintext.db";
     }
 
-    private void commandRunner(String command) {
-        ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
-        try {
-            Process process = pb.start();
-            int exitCode = process.waitFor();
-            log.info("ExitCode: " + exitCode);
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage());
+    private void extractWordleScores(List<GroupchatMessage> messages) {
+        int cnt = 0;
+        for (GroupchatMessage group : messages) {
+            log.info(group.toString());
+            if (++cnt == 10) {
+                break;
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ public class GroupchatsDialog extends Dialog {
     public void openWithGroupchats(List<GroupchatData> groupchats, CallbackService callbackService) {
         popupVL.removeAll();
         for (GroupchatData groupchatData : groupchats) {
-            popupVL.add(new SelectionRow(groupchatData.id(), callbackService)); // todo: besser aufbereiten, mit mehr daten
+            popupVL.add(new SelectionRow(groupchatData.id(), groupchatData.name(), callbackService)); // todo: besser aufbereiten, mit mehr daten
         }
         this.open();
     }

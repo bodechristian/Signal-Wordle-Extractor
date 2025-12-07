@@ -28,7 +28,11 @@ public class SQLiteRepository {
             // Parse query result
             List<GroupchatData> groupchatDataList = new ArrayList<>();
             while (rs.next()) {
-                groupchatDataList.add(new GroupchatData(rs.getString("id"), rs.getString("members")));
+                groupchatDataList.add(new GroupchatData(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getString("members")
+                ));
             }
 
             rs.close();
@@ -53,7 +57,7 @@ public class SQLiteRepository {
             List<GroupchatMessage> groupchatMessages = new ArrayList<>();
             while (rs.next()) {
                 groupchatMessages.add(new GroupchatMessage(
-                        rs.getString("name"),
+                        rs.getString("profileFullName"),
                         rs.getString("body"),
                         rs.getString("sent_at")
                 ));

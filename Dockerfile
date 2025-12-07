@@ -7,7 +7,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update package list and install sqlite3 + sqlcipher
 RUN apt-get update &&\
     apt-get install -y sqlite3 sqlcipher && \
-    echo -e sqlcipher --version && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

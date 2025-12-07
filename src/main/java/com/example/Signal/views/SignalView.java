@@ -1,7 +1,5 @@
 package com.example.Signal.views;
 
-import com.example.Signal.Components.GroupchatsDialog;
-import com.example.Signal.repositories.SQLiteRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -25,8 +23,8 @@ public class SignalView extends VerticalLayout {
     String fileName;
     SignalDataService signalDataService;
 
-    public SignalView() {
-        signalDataService = new SignalDataService(new SQLiteRepository(), new GroupchatsDialog());
+    public SignalView(SignalDataService signalDataService) {
+        this.signalDataService = signalDataService;
 
         // Self formatting
         setAlignItems(Alignment.CENTER);
