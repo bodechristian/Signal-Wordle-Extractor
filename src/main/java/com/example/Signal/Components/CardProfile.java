@@ -1,30 +1,30 @@
 package com.example.Signal.Components;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.HasText;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import lombok.Getter;
 
+@Getter
 public class CardProfile extends FlexLayout {
 
-    String text;
-    public CardProfile(String text) {
-        this();
-        this.text = text;
-    }
+    private String name;
+    private String message;
 
-    public CardProfile() {
+    public CardProfile(String name, String message) {
         setSizeFull();
         setFlexDirection(FlexDirection.COLUMN);
         setFlexWrap(FlexWrap.WRAP);
         setAlignContent(ContentAlignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
+        setClassName("seperatorBorder");
 
-        this.text = "SAMPLE TEXT";
+        add(new H3(name));
+        Span span = new Span(message);
+        span.setWhiteSpace(HasText.WhiteSpace.PRE_LINE);
+        span.getStyle().set("text-align", "center");
 
-        add(new H1(text));
-        Button btn = new Button("click me :)");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        add(btn);
+        add(span);
     }
 }

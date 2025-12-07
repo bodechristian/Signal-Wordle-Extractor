@@ -4,11 +4,15 @@ import com.example.Signal.Components.GroupchatsDialog;
 import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.SQLiteRepository;
+import com.example.Signal.views.SignalChatView;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.router.QueryParameters;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.example.Signal.Utils.commandRunner;
 
@@ -30,9 +34,13 @@ public class SignalDataService {
         groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
             @Override
             public void callbackWithGroupId(String groupId) {
-//                invokeRoute("/Signal/Chat", params = {"groupId", groupId}); // localhost:8080/Signal/Chat&groupid={groupid}
-                List<GroupchatMessage> groupies = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
-                extractWordleScores(groupies);
+                groupchatsDialog.close();
+                log.info(groupId);
+                log.info(decryptedFileName);
+                UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
+                        "filename", new String[]{decryptedFileName},
+                        "groupid", new String[]{groupId}
+                )));
             }
         });
     }
@@ -50,6 +58,12 @@ public class SignalDataService {
         commandRunner(command);
 
         return "plaintext.db";
+    }
+
+    public List<GroupchatMessage> extractWordleMessages(String decryptedFileName, String groupId) {
+        List<GroupchatMessage> groupchatMessages = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
+        extractWordleScores(groupchatMessages);
+        return groupchatMessages.subList(0, 10);
     }
 
     private void extractWordleScores(List<GroupchatMessage> messages) {
