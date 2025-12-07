@@ -1,5 +1,7 @@
 package com.example.Signal.views;
 
+import com.example.Signal.Components.GroupchatsDialog;
+import com.example.Signal.repositories.SQLiteRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -24,7 +26,7 @@ public class SignalView extends VerticalLayout {
     SignalDataService signalDataService;
 
     public SignalView() {
-        signalDataService = new SignalDataService();
+        signalDataService = new SignalDataService(new SQLiteRepository(), new GroupchatsDialog());
 
         // Self formatting
         setAlignItems(Alignment.CENTER);
@@ -33,20 +35,25 @@ public class SignalView extends VerticalLayout {
         // Components formatting
         H1 h1 = new H1("Extract Wordle scores from db.sqlite");
 
-        Button btnGo = new Button(
-                "Start",
-                buttonClickEvent -> signalDataService.analyseFile(
-                        fileName,
-                        decryptionKeyField.getValue()
-                )
-        );
-        btnGo.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button btnGo = createStartButton();
 
         decryptionKeyField = createEncryptionkeyTextField();
 
         Upload upload = createDBUploadArea();
 
         add(h1, btnGo, decryptionKeyField, upload);
+    }
+
+    private Button createStartButton() {
+        Button btn = new Button(
+                "Start",
+                buttonClickEvent -> signalDataService.analyseFile(
+                        fileName,
+                        decryptionKeyField.getValue()
+                )
+        );
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        return btn;
     }
 
     private TextField createEncryptionkeyTextField() {

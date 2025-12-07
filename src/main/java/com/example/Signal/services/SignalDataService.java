@@ -1,37 +1,29 @@
 package com.example.Signal.services;
 
-import com.example.Signal.Components.SelectionRow;
+import com.example.Signal.Components.GroupchatsDialog;
 import com.example.Signal.models.GroupchatData;
-import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.example.Signal.repositories.SQLiteRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class SignalDataService {
+
+    private final SQLiteRepository sqLiteRepository;
+    private final GroupchatsDialog groupchatsDialog;
+
     public void analyseFile(String fileName, String decryptionkey) {
         if (fileName != null) {
             String decryptedFileName = decryptDB(fileName, decryptionkey);
-            List<GroupchatData> groupchats = readDB(decryptedFileName);
+            List<GroupchatData> groupchats = sqLiteRepository.getGroups(decryptedFileName);
 
-            // todo: send to new view with data
-            VerticalLayout popupVL = new VerticalLayout();
-            popupVL.getStyle().set("gap", "0px !important");
-            for (GroupchatData groupchatData : groupchats) {
-                popupVL.add(new SelectionRow(groupchatData.getId())); // todo: besser aufbereiten, mit mehr daten
-            }
-
-            Dialog dialog = new Dialog();
-            dialog.setHeaderTitle("Your groups");
-            dialog.getHeader().getElement().getStyle()
-                    .set("display", "flex")
-                    .set("flex-direction", "column")
-                    .set("align-items", "center");
-            dialog.add(popupVL);
-            dialog.setMaxHeight("45%");
-            dialog.open();
+            groupchatsDialog.openWithGroupchats(groupchats);
         }
     }
 

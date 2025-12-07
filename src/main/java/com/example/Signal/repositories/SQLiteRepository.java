@@ -3,38 +3,38 @@ package com.example.Signal.repositories;
 import com.example.Signal.models.GroupchatData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @Getter
+@Repository
 public class SQLiteRepository {
 
-    private final String filename;
-
-    public SQLiteRepository(String filename) {
-        this.filename = filename;
-    }
-
-    public List<GroupchatData> getGroups() {
+    public List<GroupchatData> getGroups(String filename) {
         try (
-                // create a database connection
-                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + this.filename);
-                Statement statement = connection.createStatement();
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
+                Statement statement = connection.createStatement()
         ) {
+            // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery("SELECT id, members FROM conversations WHERE conversations.type = 'group'");
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPS));
+
+            // Parse query result
+            List<GroupchatData> groupchatDataList = new ArrayList<>();
+            while (rs.next()) {
+                groupchatDataList.add(new GroupchatData(rs.getString("id"), rs.getString("members")));
+            }
+
+            rs.close();
+            return groupchatDataList;
         } catch (SQLException e) {
             log.error(e.getMessage());
-            return List.of();
+            return Collections.emptyList();
         }
-        ResultSet rs =
-                List < GroupchatData > groupchatDataList = new ArrayList<>();
-        while (rs.next()) {
-            groupchatDataList.add(new GroupchatData(rs.getString("id"), rs.getString("members")));
-        }
-        return groupchatDataList;
     }
 }
