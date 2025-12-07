@@ -15,8 +15,8 @@ public class SelectionRow extends HorizontalLayout {
         this.add(id);
         this.setPadding(true);
         this.addClassName("groupdialog__row");
-        this.addClickListener(clickEvent -> {
-            this.callbackService.callbackWithGroupId(id);
-        });
+        this.addClickListener(clickEvent ->
+                this.callbackService.callbackWithGroupId(id)
+        );
     }
 }

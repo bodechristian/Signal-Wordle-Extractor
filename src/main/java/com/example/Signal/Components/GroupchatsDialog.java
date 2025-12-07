@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class GroupchatsDialog extends Dialog {
 
-    private VerticalLayout popupVL;
+    private final VerticalLayout popupVL;
 
     public GroupchatsDialog() {
         this.setHeaderTitle("Your groups");
