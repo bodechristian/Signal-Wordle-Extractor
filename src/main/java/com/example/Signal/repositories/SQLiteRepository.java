@@ -47,7 +47,7 @@ public class SQLiteRepository {
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPSMESSAGES));
+            ResultSet rs = statement.executeQuery(QueryManager.getGroupsMessagesQuery(groupId));
 
             // Parse query result
             List<GroupchatMessage> groupchatMessages = new ArrayList<>();

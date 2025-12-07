@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum Querynames {
-    A("a"),
     GETGROUPS("getGroups"),
     GETGROUPSMESSAGES("getGroupsMessages");
 
