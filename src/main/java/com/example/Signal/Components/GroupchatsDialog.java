@@ -1,6 +1,7 @@
 package com.example.Signal.Components;
 
 import com.example.Signal.models.GroupchatData;
+import com.example.Signal.services.CallbackService;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import org.springframework.stereotype.Component;
@@ -25,10 +26,10 @@ public class GroupchatsDialog extends Dialog {
         this.add(popupVL);
     }
 
-    public void openWithGroupchats(List<GroupchatData> groupchats) {
+    public void openWithGroupchats(List<GroupchatData> groupchats, CallbackService callbackService) {
         popupVL.removeAll();
         for (GroupchatData groupchatData : groupchats) {
-            popupVL.add(new SelectionRow(groupchatData.id())); // todo: besser aufbereiten, mit mehr daten
+            popupVL.add(new SelectionRow(groupchatData.id(), callbackService)); // todo: besser aufbereiten, mit mehr daten
         }
         this.open();
     }

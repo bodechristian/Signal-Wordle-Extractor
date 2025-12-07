@@ -2,6 +2,7 @@ package com.example.Signal.services;
 
 import com.example.Signal.Components.GroupchatsDialog;
 import com.example.Signal.models.GroupchatData;
+import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.SQLiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +20,25 @@ public class SignalDataService {
     private final GroupchatsDialog groupchatsDialog;
 
     public void analyseFile(String fileName, String decryptionkey) {
-        if (fileName != null) {
-            String decryptedFileName = decryptDB(fileName, decryptionkey);
-            List<GroupchatData> groupchats = sqLiteRepository.getGroups(decryptedFileName);
-
-            groupchatsDialog.openWithGroupchats(groupchats);
+        if (fileName == null) {
+            return;
         }
+        String decryptedFileName = decryptDB(fileName, decryptionkey);
+        List<GroupchatData> groupchats = sqLiteRepository.getGroups(decryptedFileName);
+
+        groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
+            @Override
+            public void callbackWithGroupId(String groupId) {
+                List<GroupchatMessage> groupies = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
+                int cnt = 0;
+                for (GroupchatMessage group : groupies) {
+                    log.info(group.toString());
+                    if (++cnt == 10) {
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     private String decryptDB(String fileName, String decryptionKey) {

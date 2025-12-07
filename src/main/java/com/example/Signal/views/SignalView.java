@@ -33,7 +33,7 @@ public class SignalView extends VerticalLayout {
         setSizeFull();
 
         // Components formatting
-        H1 h1 = new H1("Extract Wordle scores from db.sqlite");
+        H1 h1 = new H1("Extract Wordle scores");
 
         Button btnGo = createStartButton();
 

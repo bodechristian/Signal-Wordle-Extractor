@@ -1,24 +1,22 @@
 package com.example.Signal.Components;
 
+import com.example.Signal.services.CallbackService;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SelectionRow extends HorizontalLayout {
     public String id;
+    public CallbackService callbackService;
 
-    public SelectionRow(String id) {
+    public SelectionRow(String id, CallbackService callbackService) {
+        this.callbackService = callbackService;
         // am liebsten links image - aber die sind encrypted
         this.add(id);
         this.setPadding(true);
         this.addClassName("groupdialog__row");
         this.addClickListener(clickEvent -> {
-            visualiseGroup(id);
+            this.callbackService.callbackWithGroupId(id);
         });
-    }
-
-    public void visualiseGroup(String id) {
-        //todo: neuer view? wie route ich dahin
-        log.info(id);
     }
 }
