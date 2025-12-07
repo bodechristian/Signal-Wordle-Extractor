@@ -28,7 +28,7 @@ public class GroupchatsDialog extends Dialog {
     public void openWithGroupchats(List<GroupchatData> groupchats) {
         popupVL.removeAll();
         for (GroupchatData groupchatData : groupchats) {
-            popupVL.add(new SelectionRow(groupchatData.getId())); // todo: besser aufbereiten, mit mehr daten
+            popupVL.add(new SelectionRow(groupchatData.id())); // todo: besser aufbereiten, mit mehr daten
         }
         this.open();
     }
