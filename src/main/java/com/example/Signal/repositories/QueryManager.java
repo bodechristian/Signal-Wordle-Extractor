@@ -18,7 +18,7 @@ public class QueryManager {
                     "FROM messages\n" +
                     "LEFT JOIN conversations\n" +
                     "ON messages.sourceServiceId = conversations.serviceId\n" +
-                    "WHERE messages.conversationId = '<INSERTGROUPID>'\n" +
+                    "WHERE messages.conversationId = '%s'\n" +
                     "AND messages.body GLOB 'Wordle [0-9.,]* [1-6X]/6*'\n" +
                     "ORDER BY messages.sent_at DESC"
     );
@@ -41,6 +41,6 @@ public class QueryManager {
 
     public static String getGroupsMessagesQuery(String groupid) {
         String query = queries.get(Querynames.GETGROUPSMESSAGES);
-        return query.replace("<INSERTGROUPID>", groupid);
+        return query.formatted(groupid);
     }
 }
