@@ -4,14 +4,16 @@ import com.example.Signal.models.GroupchatData;
 import com.example.Signal.services.CallbackService;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 public class GroupchatsDialog extends Dialog {
 
-    private final VerticalLayout popupVL;
+    private VerticalLayout popupVL;
 
     public GroupchatsDialog() {
         this.setHeaderTitle("Your groups");
@@ -21,13 +23,26 @@ public class GroupchatsDialog extends Dialog {
                 .set("align-items", "center");
         this.setMaxHeight("45%");
 
+        createComponents();
+    }
+
+    private void createVL() {
         popupVL = new VerticalLayout();
         popupVL.getStyle().set("gap", "0px !important");
         this.add(popupVL);
     }
 
+    private void createComponents() {
+        createVL();
+    }
+
+    private void resetComponents() {
+        this.removeAll();
+        this.createComponents();
+    }
+
     public void openWithGroupchats(List<GroupchatData> groupchats, CallbackService callbackService) {
-        popupVL.removeAll();
+        this.resetComponents();
         for (GroupchatData groupchatData : groupchats) {
             popupVL.add(new SelectionRow(groupchatData.id(), groupchatData.name(), callbackService)); // todo: besser aufbereiten, mit mehr daten
         }
