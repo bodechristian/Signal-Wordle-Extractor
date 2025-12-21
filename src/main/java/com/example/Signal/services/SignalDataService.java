@@ -63,7 +63,7 @@ public class SignalDataService {
     public List<GroupchatMessage> extractWordleMessages(String decryptedFileName, String groupId) {
         List<GroupchatMessage> groupchatMessages = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
         extractWordleScores(groupchatMessages);
-        return groupchatMessages.subList(0, 10);
+        return groupchatMessages;
     }
 
     private void extractWordleScores(List<GroupchatMessage> messages) {

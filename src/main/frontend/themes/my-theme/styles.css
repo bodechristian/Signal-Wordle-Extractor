@@ -50,6 +50,41 @@ vaadin-upload {
     background-color: #f0f1ef;
 }
 
+.chat-container {
+    gap: 0;
+    background-color: #f0f1ef;
+    border-radius: 15px;
+}
+
+.chat-row {
+    justify-content: flex-start;
+    align-content: center;
+    padding: 8px 0;
+}
+
+.chat-message {
+    position: relative;
+    justify-content: center;
+    align-content: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    background-color: cadetblue;
+    border-radius: 15px;
+    padding: 8px;
+    z-index: 2;
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        background-color: cadetblue;
+        width: 15px;
+        height: 15px;
+        z-index: -1;
+    }
+}
+
 .seperatorBorder {
     position: relative;
 

@@ -1,6 +1,6 @@
 package com.example.Signal.views;
 
-import com.example.Signal.Components.CardProfile;
+import com.example.Signal.Components.CardChatMessage;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.html.H1;
@@ -17,13 +17,20 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     SignalDataService signalDataService;
 
+    VerticalLayout chatMessageContainer;
+
     String groupid;
     String filename;
 
     public SignalChatView(SignalDataService signalDataService) {
         this.signalDataService = signalDataService;
 
-        this.add(new H1("Chat View"));
+        this.add(new H1("Chat View")); // TODO: get group name
+        chatMessageContainer = new VerticalLayout();
+        chatMessageContainer.addClassNames("chat-container");
+
+        add(chatMessageContainer);
+
     }
 
     @Override
@@ -38,7 +45,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         
         List<GroupchatMessage> msgs = signalDataService.extractWordleMessages(filename, groupid);
         for (GroupchatMessage msg : msgs) {
-            add(new CardProfile(msg.author(), msg.message()));
+            chatMessageContainer.add(new CardChatMessage(msg.author(), msg.message()));
         }
     }
 }
