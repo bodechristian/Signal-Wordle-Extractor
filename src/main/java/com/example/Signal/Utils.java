@@ -5,6 +5,9 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Slf4j
 public class Utils {
@@ -26,6 +29,11 @@ public class Utils {
         } catch (Exception e) {
             log.error(e.getMessage());
         }
+    }
+
+
+    public static LocalDate toLocalDate(String timestampString) {
+        return LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(timestampString)), ZoneId.systemDefault());
     }
 
     public static int inMB(Integer mb) {

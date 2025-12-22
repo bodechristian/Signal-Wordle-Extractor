@@ -1,18 +1,14 @@
 package com.example.Signal.services;
 
-import com.example.Signal.Components.GroupchatsDialog;
-import com.example.Signal.models.GroupchatData;
+import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMessage;
+import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.repositories.SQLiteRepository;
-import com.example.Signal.views.SignalChatView;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.router.QueryParameters;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 import static com.example.Signal.Utils.commandRunner;
 
@@ -22,27 +18,14 @@ import static com.example.Signal.Utils.commandRunner;
 public class SignalDataService {
 
     private final SQLiteRepository sqLiteRepository;
-    private final GroupchatsDialog groupchatsDialog;
+    private final DataRepository dataRepository;
 
-    public void analyseFile(String fileName, String decryptionkey) {
+    public List<GroupchatDataSignal> analyseFile(String fileName, String decryptionkey) {
         if (fileName == null) {
-            return;
+            return List.of();
         }
         String decryptedFileName = decryptDB(fileName, decryptionkey);
-        List<GroupchatData> groupchats = sqLiteRepository.getGroups(decryptedFileName);
-
-        groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
-            @Override
-            public void callbackWithGroupId(String groupId) {
-                groupchatsDialog.close();
-                log.info(groupId);
-                log.info(decryptedFileName);
-                UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
-                        "filename", new String[]{decryptedFileName},
-                        "groupid", new String[]{groupId}
-                )));
-            }
-        });
+        return sqLiteRepository.getGroups(decryptedFileName);
     }
 
     private String decryptDB(String fileName, String decryptionKey) {
@@ -60,19 +43,8 @@ public class SignalDataService {
         return "plaintext.db";
     }
 
-    public List<GroupchatMessage> extractWordleMessages(String decryptedFileName, String groupId) {
-        List<GroupchatMessage> groupchatMessages = sqLiteRepository.getGroupsMessages(decryptedFileName, groupId);
-        extractWordleScores(groupchatMessages);
-        return groupchatMessages;
-    }
-
-    private void extractWordleScores(List<GroupchatMessage> messages) {
-        int cnt = 0;
-        for (GroupchatMessage group : messages) {
-            log.info(group.toString());
-            if (++cnt == 10) {
-                break;
-            }
-        }
+    public void groupSelected(String filename, GroupchatDataSignal groupdata) {
+        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupdata.id());
+        dataRepository.addGroupWithMessages(groupdata, msgs);
     }
 }

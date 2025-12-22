@@ -1,15 +1,9 @@
 package com.example.Signal.services;
 
+import com.example.Signal.models.GroupchatDataSignal;
+
 public abstract class CallbackService {
-    public void callbackWithGroupId(String groupId) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void callbackWithGroupId2(String groupId) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void callbackWithGroupId3(String groupId) {
+    public void callbackWithGroup(GroupchatDataSignal group) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

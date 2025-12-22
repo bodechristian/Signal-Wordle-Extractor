@@ -1,6 +1,6 @@
 package com.example.Signal.repositories;
 
-import com.example.Signal.models.GroupchatData;
+import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.List;
 @Repository
 public class SQLiteRepository {
 
-    public List<GroupchatData> getGroups(String filename) {
+    public List<GroupchatDataSignal> getGroups(String filename) {
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
                 Statement statement = connection.createStatement()
@@ -26,9 +26,9 @@ public class SQLiteRepository {
             ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPS));
 
             // Parse query result
-            List<GroupchatData> groupchatDataList = new ArrayList<>();
+            List<GroupchatDataSignal> groupchatDataSignalList = new ArrayList<>();
             while (rs.next()) {
-                groupchatDataList.add(new GroupchatData(
+                groupchatDataSignalList.add(new GroupchatDataSignal(
                         rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("members")
@@ -36,7 +36,7 @@ public class SQLiteRepository {
             }
 
             rs.close();
-            return groupchatDataList;
+            return groupchatDataSignalList;
         } catch (SQLException e) {
             log.error(e.getMessage());
             return Collections.emptyList();
@@ -57,6 +57,7 @@ public class SQLiteRepository {
             List<GroupchatMessage> groupchatMessages = new ArrayList<>();
             while (rs.next()) {
                 groupchatMessages.add(new GroupchatMessage(
+                        rs.getString("serviceId"),
                         rs.getString("profileFullName"),
                         rs.getString("body"),
                         rs.getString("sent_at")

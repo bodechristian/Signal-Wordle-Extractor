@@ -14,7 +14,7 @@ import java.util.Map;
 public class QueryManager {
     private static final Map<Querynames, String> queries = Map.of(
             Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'",
-            Querynames.GETGROUPSMESSAGES, "SELECT conversations.profileFullName, messages.body, messages.sent_at\n" +
+            Querynames.GETGROUPSMESSAGES, "SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at\n" +
                     "FROM messages\n" +
                     "LEFT JOIN conversations\n" +
                     "ON messages.sourceServiceId = conversations.serviceId\n" +

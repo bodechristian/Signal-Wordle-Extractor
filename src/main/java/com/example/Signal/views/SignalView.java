@@ -1,16 +1,24 @@
 package com.example.Signal.views;
 
+import com.example.Signal.Components.GroupchatsDialog;
+import com.example.Signal.models.GroupchatDataSignal;
+import com.example.Signal.services.CallbackService;
 import com.example.Signal.services.SignalDataService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.example.Signal.Utils.inMB;
 import static com.example.Signal.Utils.writeToFile;
@@ -22,6 +30,7 @@ public class SignalView extends VerticalLayout {
     TextField decryptionKeyField;
     String fileName;
     SignalDataService signalDataService;
+    GroupchatsDialog groupchatsDialog;
 
     public SignalView(SignalDataService signalDataService) {
         this.signalDataService = signalDataService;
@@ -39,19 +48,35 @@ public class SignalView extends VerticalLayout {
 
         Upload upload = createDBUploadArea();
 
-        add(h1, btnGo, decryptionKeyField, upload);
+        groupchatsDialog = new GroupchatsDialog();
+
+        add(h1, btnGo, decryptionKeyField, upload, groupchatsDialog);
     }
 
     private Button createStartButton() {
         Button btn = new Button(
                 "Start",
-                buttonClickEvent -> signalDataService.analyseFile(
-                        fileName,
-                        decryptionKeyField.getValue()
-                )
+                buttonClickEvent -> startBtnClicked()
         );
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         return btn;
+    }
+
+    private void startBtnClicked() {
+        List<GroupchatDataSignal> groupchats = signalDataService.analyseFile(
+                fileName,
+                decryptionKeyField.getValue()
+        );
+        groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
+            @Override
+            public void callbackWithGroup(GroupchatDataSignal groupdata) {
+                groupchatsDialog.close();
+                signalDataService.groupSelected("plaintext.db", groupdata);
+                UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
+                        "groupid", new String[]{groupdata.id()}
+                )));
+            }
+        });
     }
 
     private TextField createEncryptionkeyTextField() {

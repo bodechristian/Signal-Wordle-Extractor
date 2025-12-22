@@ -1,5 +1,6 @@
 *.db
 *.sqlite
+db.*
 TODO.md
 
 src/main/frontend/generated/

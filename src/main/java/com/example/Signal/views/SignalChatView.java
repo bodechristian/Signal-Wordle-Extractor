@@ -20,7 +20,6 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     VerticalLayout chatMessageContainer;
 
     String groupid;
-    String filename;
 
     public SignalChatView(SignalDataService signalDataService) {
         this.signalDataService = signalDataService;
@@ -41,9 +40,10 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         Map<String, List<String>> parametersMap = queryParameters.getParameters();
         groupid = parametersMap.get("groupid").getFirst();
-        filename = parametersMap.get("filename").getFirst();
-        
-        List<GroupchatMessage> msgs = signalDataService.extractWordleMessages(filename, groupid);
+
+        // List<GroupchatMessage> msgs = dataStructure.getGroup().getMessages().
+
+        List<GroupchatMessage> msgs = List.of();
         for (GroupchatMessage msg : msgs) {
             chatMessageContainer.add(new CardChatMessage(msg.author(), msg.message()));
         }
