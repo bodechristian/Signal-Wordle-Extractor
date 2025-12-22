@@ -8,6 +8,7 @@ import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         groupid = parametersMap.get("groupid").getFirst();
 
         GroupchatData groupData = dataRepository.getGroup(groupid);
+        if(groupData==null) {
+            chatMessageContainer.add(new H3("Invalid Group ID"));
+            return;
+        }
+
         for (LocalDate day : groupData.days_played()) {
             Accordion acc = new Accordion();
             VerticalLayout vlDay = new VerticalLayout();
