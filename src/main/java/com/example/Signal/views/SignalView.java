@@ -63,16 +63,16 @@ public class SignalView extends VerticalLayout {
     }
 
     private void startBtnClicked() {
-        List<GroupchatDataSignal> groupchats = signalDataService.analyseFile(
-                filename,
-                decryptionKeyField.getValue()
-        );
+        String decryptedFilename = signalDataService.decryptDB(filename, decryptionKeyField.getValue());
+        List<GroupchatDataSignal> groupchats = signalDataService.analyseFile(decryptedFilename);
+
         groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
             @Override
             public void callbackWithGroup(GroupchatDataSignal groupdata) {
                 groupchatsDialog.close();
-                signalDataService.groupSelected("plaintext.db", groupdata);
+                signalDataService.groupSelected(decryptedFilename, groupdata);
                 UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
+                        "filename", new String[]{decryptedFilename},
                         "groupid", new String[]{groupdata.id()}
                 )));
             }

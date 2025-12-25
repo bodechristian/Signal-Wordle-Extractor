@@ -11,6 +11,7 @@ import java.time.ZoneId;
 
 @Slf4j
 public class Utils {
+    public final static String PATHTODBS = "DBs/";
 
     public static void commandRunner(String command) {
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
@@ -23,9 +24,9 @@ public class Utils {
         }
     }
 
-    public static void writeToFile(String fileName, byte[] data) {
+    public static void writeToFile(String filepath, byte[] data) {
         try {
-            FileUtils.writeByteArrayToFile(new File(fileName), data);
+            FileUtils.writeByteArrayToFile(new File(filepath), data);
         } catch (Exception e) {
             log.error(e.getMessage());
         }

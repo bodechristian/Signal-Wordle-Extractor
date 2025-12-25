@@ -13,7 +13,6 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,13 +52,13 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         GroupchatData groupData = dataRepository.getGroup(groupid);
         if(groupData==null) {
-            signalDataService.groupSelected("plaintext.db", new GroupchatDataSignal(
-                    "01995c9e-aa59-777d-8664-9c1979e0cf7f",
-                    "CW: CIS Mannen",
-                    List.of()
-            ));
-            //chatMessageContainer.add(new H3("Invalid Group ID"));
-            //return;
+//            signalDataService.groupSelected("plaintext.db", new GroupchatDataSignal(
+//                    "01995c9e-aa59-777d-8664-9c1979e0cf7f",
+//                    "CW: CIS Mannen",
+//                    List.of()
+//            ));
+            chatMessageContainer.add(new H3("Invalid Group ID"));
+            return;
         }
 
         Accordion acc = new Accordion();

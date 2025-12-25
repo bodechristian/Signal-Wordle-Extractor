@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.example.Signal.Utils.PATHTODBS;
+
 @Slf4j
 @Getter
 @Repository
@@ -19,7 +21,7 @@ public class SQLiteRepository {
     public List<GroupchatDataSignal> getGroups(String filename) {
         log.info("Trying to read %s".formatted(filename));
         try (
-                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()
         ) {
             // Execute Query
@@ -47,7 +49,7 @@ public class SQLiteRepository {
     public List<GroupchatMessage> getGroupsMessages(String filename, String groupId) {
         log.info("Filename: {}", filename);
         try (
-                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()
         ) {
             // Execute Query
