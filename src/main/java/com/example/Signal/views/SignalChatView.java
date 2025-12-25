@@ -2,6 +2,7 @@ package com.example.Signal.views;
 
 import com.example.Signal.Components.CardChatMessage;
 import com.example.Signal.models.GroupchatData;
+import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
@@ -52,12 +53,17 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         GroupchatData groupData = dataRepository.getGroup(groupid);
         if(groupData==null) {
-            chatMessageContainer.add(new H3("Invalid Group ID"));
-            return;
+            signalDataService.groupSelected("plaintext.db", new GroupchatDataSignal(
+                    "01995c9e-aa59-777d-8664-9c1979e0cf7f",
+                    "CW: CIS Mannen",
+                    List.of()
+            ));
+            //chatMessageContainer.add(new H3("Invalid Group ID"));
+            //return;
         }
 
+        Accordion acc = new Accordion();
         for (LocalDate day : groupData.days_played()) {
-            Accordion acc = new Accordion();
             VerticalLayout vlDay = new VerticalLayout();
             for (GroupchatMember member : groupData.members()) {
                 Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
@@ -66,7 +72,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                 }
             }
             acc.add(String.valueOf(day), vlDay);
-            chatMessageContainer.add(acc);
         }
+        acc.close();
+        chatMessageContainer.add(acc);
     }
 }
