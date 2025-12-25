@@ -5,10 +5,10 @@ import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
-import com.example.Signal.repositories.SQLiteRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import lombok.extern.slf4j.Slf4j;
@@ -64,18 +64,19 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     private void createAccordionAllMessages(GroupchatData groupdata) {
         Accordion acc = new Accordion();
         for (LocalDate day : groupdata.days_played()) {
-            VerticalLayout vlDay = new VerticalLayout();
+            HorizontalLayout bubbleDay = new HorizontalLayout();
+            bubbleDay.setWrap(true);
+            bubbleDay.setWidthFull();
             for (GroupchatMember member : groupdata.members()) {
                 Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
                 if(msgs.containsKey(day)) {
-                    vlDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
+                    bubbleDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
                 }
             }
-            acc.add(String.valueOf(day), vlDay);
+            acc.add(String.valueOf(day), bubbleDay);
         }
         acc.close();
         chatMessageContainer.add(acc);
-
     }
 
     @Override

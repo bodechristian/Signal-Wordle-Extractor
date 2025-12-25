@@ -1,14 +1,14 @@
 package com.example.Signal.Components;
 
 import com.vaadin.flow.component.HasText;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.Getter;
 
 @Getter
-public class CardChatMessage extends FlexLayout {
+public class CardChatMessage extends Div {
 
     private String name;
     private String message;
@@ -16,7 +16,6 @@ public class CardChatMessage extends FlexLayout {
     private FlexLayout card;
 
     public CardChatMessage(String name, String message) {
-        this.setSizeFull();
         this.addClassNames("chat-row");
 
         card = new FlexLayout();

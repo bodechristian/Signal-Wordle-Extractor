@@ -1,3 +1,11 @@
+:root {
+    --border-radius-chat: 25px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 .groupdialog__row {
     position: relative;
     cursor: pointer;
@@ -50,14 +58,22 @@ vaadin-upload {
     background-color: #f0f1ef;
 }
 
+vaadin-accordion-panel {
+    padding: 8px;
+    border-radius: var(--border-radius-chat);
+    &[opened] {
+        background-color: rgba(167, 168, 167, 0.3);
+    }
+}
+
 .chat-container {
     gap: 0;
+    padding: 5px;
     background-color: #f0f1ef;
-    border-radius: 15px;
+    border-radius: var(--border-radius-chat);
 }
 
 .chat-row {
-    justify-content: flex-start;
     align-content: center;
     padding: 8px 0;
 }
@@ -69,7 +85,7 @@ vaadin-upload {
     flex-wrap: wrap;
     flex-direction: column;
     background-color: cadetblue;
-    border-radius: 15px;
+    border-radius: var(--border-radius-chat);
     padding: 8px;
     z-index: 2;
 
@@ -79,8 +95,8 @@ vaadin-upload {
         left: 0;
         bottom: 0;
         background-color: cadetblue;
-        width: 15px;
-        height: 15px;
+        width: var(--border-radius-chat);
+        height: var(--border-radius-chat);
         z-index: -1;
     }
 }
