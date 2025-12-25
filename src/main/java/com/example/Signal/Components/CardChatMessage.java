@@ -10,9 +10,6 @@ import lombok.Getter;
 @Getter
 public class CardChatMessage extends Div {
 
-    private String name;
-    private String message;
-
     private FlexLayout card;
 
     public CardChatMessage(String name, String message) {

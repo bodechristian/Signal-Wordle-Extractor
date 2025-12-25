@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -59,5 +60,14 @@ public class SignalDataService {
         List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupId);
         GroupchatDataSignal groupdata = sqLiteRepository.getGroupById(filename, groupId);
         return dataRepository.addGroupWithMessages(groupdata, msgs);
+    }
+
+    public List<GroupchatData> loadAllGroups(String filename) {
+        List<GroupchatDataSignal> allGroupsFromFile = sqLiteRepository.getGroups(filename); // TODO: do all chats instead
+        List<GroupchatData> loadedGroups = new ArrayList<>();
+        for (GroupchatDataSignal group : allGroupsFromFile) {
+            loadedGroups.add(this.groupSelected(filename, group.id()));
+        }
+        return loadedGroups;
     }
 }

@@ -14,13 +14,23 @@ import java.util.*;
 @Slf4j
 @Component
 public class DataRepository {
-    private Map<String, GroupchatData> data = new HashMap<>();
+    private Map<String, GroupchatData> allGroups = new HashMap<>();
+    private Map<String, GroupchatData> activeGroups = new HashMap<>();
+
+    private final SQLiteRepository sqLiteRepository;
+
+    public DataRepository(SQLiteRepository sqLiteRepository) {
+        this.sqLiteRepository = sqLiteRepository;
+    }
+
+    public GroupchatData groupSelected(String filename, String groupId) {
+        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupId);
+        GroupchatDataSignal groupdata = sqLiteRepository.getGroupById(filename, groupId);
+        return this.addGroupWithMessages(groupdata, msgs);
+    }
 
     private void addGroup(GroupchatData groupdata) {
-//        if(data.containsKey(groupdata.id())){
-//            return;
-//        }
-        data.put(groupdata.id(), groupdata);
+        allGroups.put(groupdata.id(), groupdata);
     }
 
     public GroupchatData addGroupWithMessages(GroupchatDataSignal groupdata, List<GroupchatMessage> messages) {
@@ -85,6 +95,39 @@ public class DataRepository {
     }
 
     public GroupchatData getGroup(String id) {
-        return data.get(id);
+        return allGroups.get(id);
+    }
+
+    public void setGroupActive(String id) {
+        if (allGroups.containsKey(id)) {
+            activeGroups.put(id, allGroups.get(id));
+        } else {
+
+        }
+    }
+
+    public void setGroupInactive(String id) {
+        activeGroups.remove(id);
+    }
+
+    public List<GroupchatData> getActiveGroups() {
+        return this.activeGroups.values().stream().toList();
+    }
+
+    public void addActiveGroups(Collection<GroupchatData> groups) {
+        for (GroupchatData groupdata : groups) {
+            this.setGroupActive(groupdata.id());
+        }
+    }
+
+    public void setActiveGroups(Collection<GroupchatData> groups) {
+        activeGroups.clear();
+        for (GroupchatData groupdata : groups) {
+            this.setGroupActive(groupdata.id());
+        }
+    }
+
+    public List<GroupchatData> getAllGroups() {
+        return this.allGroups.values().stream().toList();
     }
 }

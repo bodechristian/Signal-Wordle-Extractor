@@ -7,6 +7,7 @@ import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -26,6 +27,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     DataRepository dataRepository;
 
     VerticalLayout chatMessageContainer;
+    HorizontalLayout contentHeader;
 
     String filename;
     String groupid;
@@ -34,11 +36,55 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         this.signalDataService = signalDataService;
         this.dataRepository = dataRepository;
 
-        this.add(new H1("Chat View")); // TODO: get group name
+        this.add(new H1("Overview"));
+
+        contentHeader = new HorizontalLayout();
+
         chatMessageContainer = new VerticalLayout();
         chatMessageContainer.addClassNames("chat-container");
 
-        add(chatMessageContainer);
+        this.add(contentHeader, chatMessageContainer);
+    }
+
+    private void createMultiBox() {
+        List<GroupchatData> allGroups = dataRepository.getAllGroups();
+
+        MultiSelectComboBox<GroupchatData> multiselect = new MultiSelectComboBox<>();
+        multiselect.setItems(allGroups);
+        multiselect.setItemLabelGenerator(GroupchatData::name);
+        multiselect.setValue(dataRepository.getActiveGroups());
+        multiselect.addValueChangeListener(e -> {
+            dataRepository.setActiveGroups(e.getValue());
+            this.updatePage();
+        });
+
+        contentHeader.add(multiselect);
+    }
+
+    private void createAccordionAllMessages() {
+        Accordion acc = new Accordion();
+        for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
+            for (LocalDate day : groupdata.days_played()) {
+                HorizontalLayout bubbleDay = new HorizontalLayout();
+                bubbleDay.setWrap(true);
+                bubbleDay.setWidthFull();
+                for (GroupchatMember member : groupdata.members()) {
+                    Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
+                    if (msgs.containsKey(day)) {
+                        bubbleDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
+                    }
+                }
+                acc.add(String.valueOf(day), bubbleDay);
+            }
+        }
+        acc.close();
+        chatMessageContainer.add(acc);
+    }
+
+    private void updatePage() {
+        createAccordionAllMessages();
+        // TODO: create and update should be separated
+        // othweise keep creating new accordions down below
     }
 
     private void saveQueryParameters(BeforeEvent beforeEvent) {
@@ -53,40 +99,16 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         log.info("Received %s and %s".formatted(filename, groupid));
     }
 
-    private GroupchatData getCurrentGroupdata() {
-        GroupchatData groupdata = dataRepository.getGroup(groupid);
-        if(groupdata==null) {
-            groupdata = signalDataService.groupSelected(filename, groupid);
-        }
-        return groupdata;
-    }
-
-    private void createAccordionAllMessages(GroupchatData groupdata) {
-        Accordion acc = new Accordion();
-        for (LocalDate day : groupdata.days_played()) {
-            HorizontalLayout bubbleDay = new HorizontalLayout();
-            bubbleDay.setWrap(true);
-            bubbleDay.setWidthFull();
-            for (GroupchatMember member : groupdata.members()) {
-                Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
-                if(msgs.containsKey(day)) {
-                    bubbleDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
-                }
-            }
-            acc.add(String.valueOf(day), bubbleDay);
-        }
-        acc.close();
-        chatMessageContainer.add(acc);
-    }
-
     @Override
     public void setParameter(BeforeEvent beforeEvent, @OptionalParameter String s) {
         log.info("IM IN");
 
         saveQueryParameters(beforeEvent);
 
-        GroupchatData groupData = this.getCurrentGroupdata();
+        signalDataService.loadAllGroups(filename);
+        dataRepository.setGroupActive(groupid);
 
-        this.createAccordionAllMessages(groupData);
+        this.createMultiBox();
+        this.createAccordionAllMessages();
     }
 }
