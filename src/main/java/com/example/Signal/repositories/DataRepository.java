@@ -17,18 +17,19 @@ public class DataRepository {
     private Map<String, GroupchatData> data = new HashMap<>();
 
     private void addGroup(GroupchatData groupdata) {
-        if(data.containsKey(groupdata.id())){
-            return;
-        }
+//        if(data.containsKey(groupdata.id())){
+//            return;
+//        }
         data.put(groupdata.id(), groupdata);
     }
 
-    public void addGroupWithMessages(GroupchatDataSignal groupdata, List<GroupchatMessage> messages) {
+    public GroupchatData addGroupWithMessages(GroupchatDataSignal groupdata, List<GroupchatMessage> messages) {
         List<GroupchatMember> members = this.loadMembers(messages);
         List<LocalDate> days_played = this.getDaysPlayed(members);
         GroupchatData newGroupData = new GroupchatData(groupdata.id(), groupdata.name(), members, days_played);
         log.info("added %s".formatted(String.valueOf(newGroupData)));
         this.addGroup(newGroupData);
+        return newGroupData;
     }
 
     private List<GroupchatMember> loadMembers(List<GroupchatMessage> messages) {

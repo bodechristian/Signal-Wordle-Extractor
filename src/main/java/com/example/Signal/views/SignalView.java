@@ -70,7 +70,6 @@ public class SignalView extends VerticalLayout {
             @Override
             public void callbackWithGroup(GroupchatDataSignal groupdata) {
                 groupchatsDialog.close();
-                signalDataService.groupSelected(decryptedFilename, groupdata);
                 UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
                         "filename", new String[]{decryptedFilename},
                         "groupid", new String[]{groupdata.id()}

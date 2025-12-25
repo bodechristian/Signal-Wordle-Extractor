@@ -10,6 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static com.example.Signal.Utils.PATHTODBS;
 
@@ -43,6 +44,37 @@ public class SQLiteRepository {
         } catch (SQLException e) {
             log.error(e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    public GroupchatDataSignal getGroupById(String filename, String groupId) {
+        try (
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
+                Statement statement = connection.createStatement()
+        ) {
+            // Execute Query
+            statement.setQueryTimeout(30);
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPS));
+
+            // Parse query result
+            while (rs.next()) {
+                String groupsId = rs.getString("id");
+                if (Objects.equals(groupsId, groupId)) {
+                    GroupchatDataSignal groupdata = new GroupchatDataSignal(
+                            groupsId,
+                            rs.getString("name"),
+                            rs.getString("members")
+                    );
+                    rs.close();
+                    return groupdata;
+                }
+            }
+            rs.close();
+            log.info("Could not find jack shit");
+            return null;
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+            return null;
         }
     }
 

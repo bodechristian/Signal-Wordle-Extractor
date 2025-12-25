@@ -1,5 +1,6 @@
 package com.example.Signal.services;
 
+import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
@@ -54,8 +55,9 @@ public class SignalDataService {
         return sqLiteRepository.getGroups(decryptedFilename);
     }
 
-    public void groupSelected(String filename, GroupchatDataSignal groupdata) {
-        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupdata.id());
-        dataRepository.addGroupWithMessages(groupdata, msgs);
+    public GroupchatData groupSelected(String filename, String groupId) {
+        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupId);
+        GroupchatDataSignal groupdata = sqLiteRepository.getGroupById(filename, groupId);
+        return dataRepository.addGroupWithMessages(groupdata, msgs);
     }
 }
