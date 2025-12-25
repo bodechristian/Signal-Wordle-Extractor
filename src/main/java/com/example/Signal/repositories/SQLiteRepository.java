@@ -17,6 +17,7 @@ import java.util.List;
 public class SQLiteRepository {
 
     public List<GroupchatDataSignal> getGroups(String filename) {
+        log.info("Trying to read %s".formatted(filename));
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
                 Statement statement = connection.createStatement()

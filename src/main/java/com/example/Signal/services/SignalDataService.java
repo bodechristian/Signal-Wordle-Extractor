@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 import static com.example.Signal.Utils.commandRunner;
@@ -20,27 +22,36 @@ public class SignalDataService {
     private final SQLiteRepository sqLiteRepository;
     private final DataRepository dataRepository;
 
-    public List<GroupchatDataSignal> analyseFile(String fileName, String decryptionkey) {
-        if (fileName == null) {
+    public List<GroupchatDataSignal> analyseFile(String filename, String decryptionkey) {
+        if (filename == null) {
             return List.of();
         }
-        String decryptedFileName = decryptDB(fileName, decryptionkey);
-        return sqLiteRepository.getGroups(decryptedFileName);
+        String decryptedFilename = decryptDB(filename, decryptionkey);
+        return sqLiteRepository.getGroups(decryptedFilename);
     }
 
-    private String decryptDB(String fileName, String decryptionKey) {
-        log.info("Decrypting file: " + fileName);
-        log.info("Decrypting file: " + decryptionKey);
+    private String decryptDB(String filename, String decryptionKey) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        String outputFilename = "%s/%s%s.db".formatted("DBs", filename, timestamp);
 
         // 1st prepare .sql file
-        String command = String.format("sed s/INSERTHERE/%s/ unencryptDB-template.sql > unencryptDB.sql", decryptionKey);
+        String command = String.format(
+                "sed s=INSERTKEY=%s= unencryptDB-template.sql " +
+                "| sed s=INSERTFILENAME=%s= " +
+                        "> unencryptDB.sql",
+                decryptionKey,
+                outputFilename
+        );
         commandRunner(command);
+
+        // TODO: make these commands atomic somehow.
+        // 2nd simultaneous process could change unencryptdb.sql before last command
 
         // 2nd execute sql file IN SQLCIPHER to create plaintext.db
-        command = String.format("sqlcipher %s < unencryptDB.sql", fileName);
+        command = String.format("sqlcipher %s < unencryptDB.sql", filename);
         commandRunner(command);
 
-        return "plaintext.db";
+        return outputFilename;
     }
 
     public void groupSelected(String filename, GroupchatDataSignal groupdata) {

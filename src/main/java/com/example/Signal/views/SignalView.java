@@ -28,7 +28,7 @@ import static com.example.Signal.Utils.writeToFile;
 public class SignalView extends VerticalLayout {
 
     TextField decryptionKeyField;
-    String fileName;
+    String filename;
     SignalDataService signalDataService;
     GroupchatsDialog groupchatsDialog;
 
@@ -64,7 +64,7 @@ public class SignalView extends VerticalLayout {
 
     private void startBtnClicked() {
         List<GroupchatDataSignal> groupchats = signalDataService.analyseFile(
-                fileName,
+                filename,
                 decryptionKeyField.getValue()
         );
         groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
@@ -106,15 +106,16 @@ public class SignalView extends VerticalLayout {
     private InMemoryUploadHandler dbUploadedHandler() {
         return UploadHandler.inMemory(
                 (metadata, data) -> {
-                    fileName = metadata.fileName();
+                    String filepath = "DBs/";
+                    filename = metadata.fileName();
                     String mimeType = metadata.contentType();
                     long contentLength = metadata.contentLength();
 
-                    log.info(fileName);
+                    log.info(filename);
                     log.info(mimeType);
                     log.info(Long.toString(contentLength));
 
-                    writeToFile(fileName, data);
+                    writeToFile(filepath + filename, data);
                 }
         );
     }
