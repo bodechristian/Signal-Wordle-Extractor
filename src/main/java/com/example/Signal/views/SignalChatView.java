@@ -14,7 +14,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +25,10 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     SignalDataService signalDataService;
     DataRepository dataRepository;
 
-    VerticalLayout chatMessageContainer;
     HorizontalLayout contentHeader;
+    VerticalLayout contentContainer;
+    Accordion accordionAllMessages;
+    MultiSelectComboBox<GroupchatData> multiselectChats;
 
     String filename;
     String groupid;
@@ -39,30 +40,34 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         this.add(new H1("Overview"));
 
         contentHeader = new HorizontalLayout();
-
-        chatMessageContainer = new VerticalLayout();
-        chatMessageContainer.addClassNames("chat-container");
-
-        this.add(contentHeader, chatMessageContainer);
-    }
-
-    private void createMultiBox() {
-        List<GroupchatData> allGroups = dataRepository.getAllGroups();
-
-        MultiSelectComboBox<GroupchatData> multiselect = new MultiSelectComboBox<>();
-        multiselect.setItems(allGroups);
-        multiselect.setItemLabelGenerator(GroupchatData::name);
-        multiselect.setValue(dataRepository.getActiveGroups());
-        multiselect.addValueChangeListener(e -> {
-            dataRepository.setActiveGroups(e.getValue());
+        multiselectChats = new MultiSelectComboBox<>();
+        multiselectChats.setItemLabelGenerator(GroupchatData::name);
+        multiselectChats.addValueChangeListener(event -> {
+            if (!event.isFromClient()) {
+                return; // ignore programmatic changes
+            }
+            dataRepository.setActiveGroups(event.getValue());
             this.updatePage();
         });
+        contentHeader.add(multiselectChats);
 
-        contentHeader.add(multiselect);
+        contentContainer = new VerticalLayout();
+        contentContainer.addClassNames("chat-container");
+        accordionAllMessages = new Accordion();
+        contentContainer.add(accordionAllMessages);
+
+        this.add(contentHeader, contentContainer);
     }
 
-    private void createAccordionAllMessages() {
-        Accordion acc = new Accordion();
+    private void updateMultiselectGroups() {
+        List<GroupchatData> allGroups = dataRepository.getAllGroups();
+
+        multiselectChats.setItems(allGroups);
+        multiselectChats.setValue(dataRepository.getActiveGroups());
+    }
+
+    private void updateAccordionAllMessages() {
+        accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
             for (LocalDate day : groupdata.days_played()) {
                 HorizontalLayout bubbleDay = new HorizontalLayout();
@@ -74,17 +79,14 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                         bubbleDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
                     }
                 }
-                acc.add(String.valueOf(day), bubbleDay);
+                accordionAllMessages.add(String.valueOf(day), bubbleDay);
             }
         }
-        acc.close();
-        chatMessageContainer.add(acc);
     }
 
     private void updatePage() {
-        createAccordionAllMessages();
-        // TODO: create and update should be separated
-        // othweise keep creating new accordions down below
+        this.updateMultiselectGroups();
+        this.updateAccordionAllMessages();
     }
 
     private void saveQueryParameters(BeforeEvent beforeEvent) {
@@ -108,7 +110,6 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         signalDataService.loadAllGroups(filename);
         dataRepository.setGroupActive(groupid);
 
-        this.createMultiBox();
-        this.createAccordionAllMessages();
+        this.updatePage();
     }
 }
