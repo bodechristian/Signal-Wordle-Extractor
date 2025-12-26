@@ -14,20 +14,9 @@ import java.util.*;
 @Slf4j
 @Component
 public class DataRepository {
+    private String ownerId = "";
     private Map<String, GroupchatData> allGroups = new HashMap<>();
     private Map<String, GroupchatData> activeGroups = new HashMap<>();
-
-    private final SQLiteRepository sqLiteRepository;
-
-    public DataRepository(SQLiteRepository sqLiteRepository) {
-        this.sqLiteRepository = sqLiteRepository;
-    }
-
-    public GroupchatData groupSelected(String filename, String groupId) {
-        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupId);
-        GroupchatDataSignal groupdata = sqLiteRepository.getGroupById(filename, groupId);
-        return this.addGroupWithMessages(groupdata, msgs);
-    }
 
     private void addGroup(GroupchatData groupdata) {
         allGroups.put(groupdata.id(), groupdata);
@@ -101,8 +90,6 @@ public class DataRepository {
     public void setGroupActive(String id) {
         if (allGroups.containsKey(id)) {
             activeGroups.put(id, allGroups.get(id));
-        } else {
-
         }
     }
 
@@ -129,5 +116,13 @@ public class DataRepository {
 
     public List<GroupchatData> getAllGroups() {
         return this.allGroups.values().stream().toList();
+    }
+
+    public void setOwner(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public String getOwner() {
+        return this.ownerId;
     }
 }

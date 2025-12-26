@@ -6,7 +6,6 @@ import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.H1;
@@ -52,19 +51,19 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             dataRepository.setActiveGroups(event.getValue());
             this.updatePage();
         });
-        contentHeader.add(multiselectChats);
 
         contentContainer = new VerticalLayout();
         contentContainer.addClassNames("chat-container");
         accordionSuper = new Accordion();
         accordionSuper.setWidthFull();
-        contentContainer.add(accordionSuper);
         HorizontalLayout hl = new HorizontalLayout();
         hl.add(new H3("tadaa"));
-        accordionSuper.add("Statistics", hl);
         accordionAllMessages = new Accordion();
-        accordionSuper.add("All Messages", accordionAllMessages);
 
+        accordionSuper.add("Statistics", hl);
+        accordionSuper.add("All Messages", accordionAllMessages);
+        contentContainer.add(accordionSuper);
+        contentHeader.add(multiselectChats);
         this.add(contentHeader, contentContainer);
     }
 

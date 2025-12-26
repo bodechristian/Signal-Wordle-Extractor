@@ -85,20 +85,9 @@ vaadin-accordion-panel {
     flex-wrap: wrap;
     flex-direction: column;
     background-color: cadetblue;
-    border-radius: var(--border-radius-chat);
-    padding: 8px;
+    border-radius: var(--border-radius-chat) var(--border-radius-chat) var(--border-radius-chat) 0;
+    padding: 10px;
     z-index: 2;
-
-    &::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        background-color: cadetblue;
-        width: var(--border-radius-chat);
-        height: var(--border-radius-chat);
-        z-index: -1;
-    }
 }
 
 .seperatorBorder {

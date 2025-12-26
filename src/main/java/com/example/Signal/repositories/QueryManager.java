@@ -13,14 +13,17 @@ import java.util.Map;
 @Slf4j
 public class QueryManager {
     private static final Map<Querynames, String> queries = Map.of(
+            Querynames.GETOWNER, "SELECT json FROM items WHERE id = 'uuid_id'",
+            Querynames.GETDMS, "SELECT serviceId, profileFullName FROM conversations WHERE conversations.type = 'private'", // TODO
             Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'",
-            Querynames.GETGROUPSMESSAGES, "SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at\n" +
-                    "FROM messages\n" +
-                    "LEFT JOIN conversations\n" +
-                    "ON messages.sourceServiceId = conversations.serviceId\n" +
-                    "WHERE messages.conversationId = '%s'\n" +
-                    "AND messages.body GLOB 'Wordle [0-9.,]* [1-6X]/6*'\n" +
-                    "ORDER BY messages.sent_at DESC"
+            Querynames.GETGROUPSMESSAGES, """
+                    SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at
+                    FROM messages
+                    LEFT JOIN conversations
+                    ON messages.sourceServiceId = conversations.serviceId
+                    WHERE messages.conversationId = '%s'
+                    AND messages.body GLOB 'Wordle [0-9.,]* [1-6X]/6*'
+                    ORDER BY messages.sent_at DESC"""
     );
 
     private static final List<Querynames> queriesWithParameters = List.of(Querynames.GETGROUPSMESSAGES);

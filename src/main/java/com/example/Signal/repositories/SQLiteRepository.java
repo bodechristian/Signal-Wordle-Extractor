@@ -2,6 +2,9 @@ package com.example.Signal.repositories;
 
 import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -19,6 +22,31 @@ import static com.example.Signal.Utils.PATHTODBS;
 @Repository
 public class SQLiteRepository {
 
+    public String getOwnerId(String filename) {
+        try (
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
+                Statement statement = connection.createStatement()
+        ) {
+            // Execute Query
+            statement.setQueryTimeout(30);
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETOWNER));
+
+            // Parse query result
+            String uuidJsonString = rs.getString("json");
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(uuidJsonString);
+            String uuidOwner = root.get("value").asText();
+
+            rs.close();
+            return uuidOwner;
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+            return "";
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<GroupchatDataSignal> getGroups(String filename) {
         log.info("Trying to read %s".formatted(filename));
         try (
@@ -31,7 +59,7 @@ public class SQLiteRepository {
 
             // Parse query result
             List<GroupchatDataSignal> groupchatDataSignalList = new ArrayList<>();
-            while (rs.next()) {
+            while (rs.next()) { // TODO: überspringe ich nicht die 1. Nachricht??
                 groupchatDataSignalList.add(new GroupchatDataSignal(
                         rs.getString("id"),
                         rs.getString("name"),
