@@ -43,7 +43,7 @@ public class SignalDataService {
         }
 
         // TODO: make these commands atomic somehow.
-        // 2nd simultaneous process could change unencryptdb.sql before last command
+        // because 2nd simultaneous process could change unencryptdb.sql before last command
 
         // 2nd execute sql file IN SQLCIPHER to create plaintext.db
         String command = String.format("sqlcipher %s < unencryptDB.sql", PATHTODBS+filename);
