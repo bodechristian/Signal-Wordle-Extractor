@@ -1,29 +1,21 @@
 package com.example.Signal.Components;
 
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import lombok.Getter;
 
 @Getter
-public class CardChatMessage extends Div {
-
-    private final FlexLayout card;
+public class CardChatMessage extends FlexLayout {
 
     public CardChatMessage(String name, String message) {
-        this.addClassNames("chat-row");
+        this.addClassNames("chat-message");
 
-        card = new FlexLayout();
-        card.addClassNames("chat-message");
+        H3 header = new H3(name);
 
-        H3 h3name = new H3(name);
-        // h3name.getStyle().set("text-align", "center");
+        Span content = createMessage(message);
 
-        Span span = createMessage(message);
-
-        card.add(h3name, span);
-        this.add(card);
+        this.add(header, content);
     }
 
     public Span createMessage(String wordleText) {

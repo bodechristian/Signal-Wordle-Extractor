@@ -78,16 +78,15 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
             for (LocalDate day : groupdata.days_played()) {
-                HorizontalLayout bubbleDay = new HorizontalLayout();
-                bubbleDay.setWrap(true);
-                bubbleDay.setWidthFull();
+                HorizontalLayout rowDay = new HorizontalLayout();
+                rowDay.addClassName("chat-messages-row");
                 for (GroupchatMember member : groupdata.members()) {
                     Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
                     if (msgs.containsKey(day)) {
-                        bubbleDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
+                        rowDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
                     }
                 }
-                accordionAllMessages.add(String.valueOf(day), bubbleDay);
+                accordionAllMessages.add(String.valueOf(day), rowDay);
             }
         }
     }

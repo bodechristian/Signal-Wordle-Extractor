@@ -74,9 +74,10 @@ vaadin-accordion-panel {
   border-radius: var(--border-radius-chat);
 }
 
-.chat-row {
-  align-content: center;
-  padding: 8px 0;
+.chat-messages-row {
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: start;
 }
 
 .chat-message {
@@ -88,7 +89,6 @@ vaadin-accordion-panel {
   background-color: cadetblue;
   border-radius: var(--border-radius-chat) var(--border-radius-chat) var(--border-radius-chat) 0;
   padding: 10px;
-  z-index: 2;
 
   &__content {
     white-space: pre-line;
