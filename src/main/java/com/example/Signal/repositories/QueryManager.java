@@ -2,7 +2,6 @@ package com.example.Signal.repositories;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,8 +12,9 @@ import java.util.Map;
 @Slf4j
 public class QueryManager {
     private static final Map<Querynames, String> queries = Map.of(
-            Querynames.GETOWNER, "SELECT json FROM items WHERE id = 'uuid_id'",
-            Querynames.GETDMS, "SELECT serviceId, profileFullName FROM conversations WHERE conversations.type = 'private'", // TODO
+            Querynames.GETOWNERID, "SELECT json FROM items WHERE id = 'uuid_id'",
+            Querynames.GETUSERSNAME, "SELECT profileFullName FROM conversations WHERE serviceId = '%s'",
+            Querynames.GETDMS, "SELECT serviceId, profileFullName FROM conversations WHERE conversations.type = 'private'",// TODO
             Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'",
             Querynames.GETGROUPSMESSAGES, """
                     SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at
@@ -26,15 +26,13 @@ public class QueryManager {
                     ORDER BY messages.sent_at DESC"""
     );
 
-    private static final List<Querynames> queriesWithParameters = List.of(Querynames.GETGROUPSMESSAGES);
-
     public static String getQuery(Querynames queryname) {
         if (!queries.containsKey(queryname)) {
             log.error("Query " + queryname + " does not have an SQL query at the moment.");
             return "";
         }
 
-        if (queriesWithParameters.contains(queryname)) {
+        if (queries.get(queryname).contains("%s")) {
             log.error(queryname + " requires extra parameters and should be called by its specific function");
             return "";
         }
@@ -43,7 +41,10 @@ public class QueryManager {
     }
 
     public static String getGroupsMessagesQuery(String groupid) {
-        String query = queries.get(Querynames.GETGROUPSMESSAGES);
-        return query.formatted(groupid);
+        return queries.get(Querynames.GETGROUPSMESSAGES).formatted(groupid);
+    }
+
+    public static String getUsersName(String userId) {
+        return queries.get(Querynames.GETUSERSNAME).formatted(userId);
     }
 }

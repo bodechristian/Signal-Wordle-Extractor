@@ -56,22 +56,27 @@ public class SignalDataService {
         return sqLiteRepository.getGroups(decryptedFilename);
     }
 
-    public GroupchatData groupSelected(String filename, String groupId) {
-        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupId);
-        GroupchatDataSignal groupdata = sqLiteRepository.getGroupById(filename, groupId);
+    public GroupchatData groupSelected(String filename, GroupchatDataSignal groupdata) {
+        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupdata.id());
         return dataRepository.addGroupWithMessages(groupdata, msgs);
+    }
+
+    public List<GroupchatData> loadGroups(List<GroupchatDataSignal> groups, String filename) {
+        // how to know which chats have text in them
+        // save number of wordle messages per chatroom to display in multiselect?
+        List<GroupchatData> loadedGroups = new ArrayList<>();
+        for (GroupchatDataSignal group : groups) {
+            loadedGroups.add(this.groupSelected(filename, group));
+        }
+        return loadedGroups;
     }
 
     public List<GroupchatData> loadAllGroups(String filename) {
         String ownerId = sqLiteRepository.getOwnerId(filename);
-        dataRepository.setOwner(ownerId);
+        dataRepository.setOwnerId(ownerId);
+        String ownerName = sqLiteRepository.getUsersName(filename, ownerId);
+        dataRepository.setOwnerName(ownerName);
         List<GroupchatDataSignal> allGroupsFromFile = sqLiteRepository.getGroups(filename); // TODO: do all chats instead
-        // how to know which chats have text in them
-        // save number of wordle messages per chatroom to display in multiselect?
-        List<GroupchatData> loadedGroups = new ArrayList<>();
-        for (GroupchatDataSignal group : allGroupsFromFile) {
-            loadedGroups.add(this.groupSelected(filename, group.id()));
-        }
-        return loadedGroups;
+        return this.loadGroups(allGroupsFromFile, filename);
     }
 }

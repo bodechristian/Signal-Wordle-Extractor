@@ -5,6 +5,8 @@ import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatDataSignal;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +16,14 @@ import java.util.*;
 @Slf4j
 @Component
 public class DataRepository {
+    private final Map<String, GroupchatData> allGroups = new HashMap<>();
+    private final Map<String, GroupchatData> activeGroups = new HashMap<>();
+    @Getter
+    @Setter
     private String ownerId = "";
-    private Map<String, GroupchatData> allGroups = new HashMap<>();
-    private Map<String, GroupchatData> activeGroups = new HashMap<>();
+    @Getter
+    @Setter
+    private String ownerName = "";
 
     private void addGroup(GroupchatData groupdata) {
         allGroups.put(groupdata.id(), groupdata);
@@ -34,7 +41,7 @@ public class DataRepository {
     private List<GroupchatMember> loadMembers(List<GroupchatMessage> messages) {
         Map<String, List<GroupchatMessage>> membersMessages = this.selectEachMembersMessages(messages);
 
-        List<GroupchatMember> mylist = new ArrayList<>(List.of());
+        List<GroupchatMember> mylist = new ArrayList<>();
         for (String member_id : membersMessages.keySet()) {
             List<GroupchatMessage> msgs = membersMessages.get(member_id);
             mylist.add(GroupchatMember.builder()
@@ -61,6 +68,9 @@ public class DataRepository {
         Map<String, List<GroupchatMessage>> mymap = new HashMap<>();
 
         for(GroupchatMessage msg : messages) {
+            if (msg.authorId()==null) { // fix discrepency between phone and desktop of owner
+                msg = new GroupchatMessage(this.ownerId, this.ownerName, msg.message(), msg.timestamp());
+            }
             if(!mymap.containsKey(msg.authorId())) {
                 mymap.put(msg.authorId(), new ArrayList<>(List.of(msg)));
             } else {
@@ -101,12 +111,6 @@ public class DataRepository {
         return this.activeGroups.values().stream().toList();
     }
 
-    public void addActiveGroups(Collection<GroupchatData> groups) {
-        for (GroupchatData groupdata : groups) {
-            this.setGroupActive(groupdata.id());
-        }
-    }
-
     public void setActiveGroups(Collection<GroupchatData> groups) {
         activeGroups.clear();
         for (GroupchatData groupdata : groups) {
@@ -114,15 +118,13 @@ public class DataRepository {
         }
     }
 
+    public void addActiveGroups(Collection<GroupchatData> groups) {
+        for (GroupchatData groupdata : groups) {
+            this.setGroupActive(groupdata.id());
+        }
+    }
+
     public List<GroupchatData> getAllGroups() {
         return this.allGroups.values().stream().toList();
-    }
-
-    public void setOwner(String ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public String getOwner() {
-        return this.ownerId;
     }
 }

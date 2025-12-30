@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum Querynames {
-    GETOWNER("getOwner"),
+    GETOWNERID("getOwnerId"),
+    GETUSERSNAME("getOwnerName"),
     GETDMS("getDms"),
     GETGROUPS("getGroups"),
     GETGROUPSMESSAGES("getGroupsMessages");

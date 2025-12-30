@@ -13,7 +13,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static com.example.Signal.Utils.PATHTODBS;
 
@@ -29,13 +28,13 @@ public class SQLiteRepository {
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETOWNER));
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETOWNERID));
 
             // Parse query result
             String uuidJsonString = rs.getString("json");
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(uuidJsonString);
-            String uuidOwner = root.get("value").asText();
+            String uuidOwner = root.get("value").asText().split("\\.")[0];
 
             rs.close();
             return uuidOwner;
@@ -44,6 +43,25 @@ public class SQLiteRepository {
             return "";
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public String getUsersName(String filename, String userId) {
+        try (
+                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
+                Statement statement = connection.createStatement()
+        ) {
+            // Execute Query
+            statement.setQueryTimeout(30);
+            ResultSet rs = statement.executeQuery(QueryManager.getUsersName(userId));
+
+            // Parse query result
+            String name = rs.getString("profileFullName");
+            rs.close();
+            return name;
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+            return "";
         }
     }
 
@@ -72,37 +90,6 @@ public class SQLiteRepository {
         } catch (SQLException e) {
             log.error(e.getMessage());
             return Collections.emptyList();
-        }
-    }
-
-    public GroupchatDataSignal getGroupById(String filename, String groupId) {
-        try (
-                Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
-                Statement statement = connection.createStatement()
-        ) {
-            // Execute Query
-            statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPS));
-
-            // Parse query result
-            while (rs.next()) {
-                String groupsId = rs.getString("id");
-                if (Objects.equals(groupsId, groupId)) {
-                    GroupchatDataSignal groupdata = new GroupchatDataSignal(
-                            groupsId,
-                            rs.getString("name"),
-                            rs.getString("members")
-                    );
-                    rs.close();
-                    return groupdata;
-                }
-            }
-            rs.close();
-            log.info("Could not find jack shit");
-            return null;
-        } catch (SQLException e) {
-            log.error(e.getMessage());
-            return null;
         }
     }
 
