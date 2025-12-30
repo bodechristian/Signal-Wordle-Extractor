@@ -7,6 +7,8 @@ import com.example.Signal.models.GroupchatMessage;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
@@ -19,21 +21,27 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Integer.min;
+
 @Slf4j
 @Route("/signal/chat")
 public class SignalChatView extends VerticalLayout implements HasUrlParameter<String> {
+
+    private final int chunksize = 10;
 
     SignalDataService signalDataService;
     DataRepository dataRepository;
 
     HorizontalLayout contentHeader;
     VerticalLayout contentContainer;
+
     Accordion accordionSuper;
     Accordion accordionAllMessages;
     MultiSelectComboBox<GroupchatData> multiselectChats;
 
-    String filename;
-    String groupid;
+    private String filename;
+    private String groupid;
+    private int chunkidx = 0;
 
     public SignalChatView(SignalDataService signalDataService, DataRepository dataRepository) {
         this.signalDataService = signalDataService;
@@ -41,6 +49,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         this.add(new H1("Overview"));
 
+        // Header
         contentHeader = new HorizontalLayout();
         multiselectChats = new MultiSelectComboBox<>();
         multiselectChats.setItemLabelGenerator(GroupchatData::name);
@@ -51,19 +60,29 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             dataRepository.setActiveGroups(event.getValue());
             this.updatePage();
         });
+        contentHeader.add(multiselectChats);
 
+        // Content
         contentContainer = new VerticalLayout();
         contentContainer.addClassNames("chat-container");
+
         accordionSuper = new Accordion();
-        accordionSuper.setWidthFull();
+        accordionSuper.addClassName("chat-accordion-super");
         HorizontalLayout hl = new HorizontalLayout();
         hl.add(new H3("tadaa"));
         accordionAllMessages = new Accordion();
-
         accordionSuper.add("Statistics", hl);
         accordionSuper.add("All Messages", accordionAllMessages);
-        contentContainer.add(accordionSuper);
-        contentHeader.add(multiselectChats);
+
+        Button btnLoadMore = new Button("Load More");
+        btnLoadMore.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        btnLoadMore.addClickListener(e -> this.addAccordionMessages());
+        HorizontalLayout hl2 = new HorizontalLayout(btnLoadMore);
+        hl2.setWidthFull();
+        hl2.getStyle().set("justify-content", "center");
+
+        contentContainer.add(accordionSuper, hl2);
+
         this.add(contentHeader, contentContainer);
     }
 
@@ -74,10 +93,16 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         multiselectChats.setValue(dataRepository.getActiveGroups());
     }
 
-    private void updateAccordionAllMessages() {
-        accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
+    private void addAccordionMessages() {
+        // loads one chunk of messages
+        // currently does it for each group, which obviously is wrong and would load a lot when many groups
+        // this gets fixed when reworking groups into 1 supergroup in dataRepository
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
-            for (LocalDate day : groupdata.days_played()) {
+            int chunkStart = chunkidx * chunksize;
+            int chunkEnd = min(groupdata.days_played().size(),(chunkidx + 1) * chunksize);
+            if (chunkStart > groupdata.days_played().size()) { continue; }
+
+            for (LocalDate day : groupdata.days_played().subList(chunkStart, chunkEnd)) {
                 HorizontalLayout rowDay = new HorizontalLayout();
                 rowDay.addClassName("chat-messages-row");
                 for (GroupchatMember member : groupdata.members()) {
@@ -89,6 +114,13 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                 accordionAllMessages.add(String.valueOf(day), rowDay);
             }
         }
+        this.chunkidx += 1;
+    }
+
+    private void updateAccordionAllMessages() {
+        accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
+        this.chunkidx = 0;
+        this.addAccordionMessages();
     }
 
     private void updatePage() {

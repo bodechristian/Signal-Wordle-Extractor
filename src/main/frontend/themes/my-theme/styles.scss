@@ -70,6 +70,10 @@ vaadin-accordion-panel {
 .chat-container {
   gap: 0;
   padding: 5px;
+}
+
+.chat-accordion-super {
+  width: 100%;
   background-color: #f0f1ef;
   border-radius: var(--border-radius-chat);
 }
