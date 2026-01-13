@@ -91,6 +91,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         VerticalLayout statisticsPanel = new VerticalLayout();
         statisticsPanel.setPadding(false);
         statisticsPanel.setSpacing(true);
+        statisticsPanel.addClassName("statistics-panel");
 
         // Timeframe selector
         selectTimeframe = new Select<>();
@@ -137,16 +138,24 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         statisticsPanel.add(selectTimeframe, hlCustomDateRange, hlEvaluation);
 
         accordionAllMessages = new Accordion();
-        accordionSuper.add("Statistics", statisticsPanel);
-        accordionSuper.add("All Messages", accordionAllMessages);
-
+        
+        // Create Load More button and container
         Button btnLoadMore = new Button("Load More");
         btnLoadMore.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
         btnLoadMore.addClickListener(e -> this.addAccordionMessages());
         HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
         hlLoadMore.addClassName("load-more-container");
+        
+        // Create a container for messages + load more button
+        VerticalLayout allMessagesContent = new VerticalLayout();
+        allMessagesContent.setPadding(false);
+        allMessagesContent.setSpacing(false);
+        allMessagesContent.add(accordionAllMessages, hlLoadMore);
+        
+        accordionSuper.add("Statistics", statisticsPanel);
+        accordionSuper.add("All Messages", allMessagesContent);
 
-        contentContainer.add(accordionSuper, hlLoadMore);
+        contentContainer.add(accordionSuper);
 
         this.add(contentHeader, contentContainer);
     }

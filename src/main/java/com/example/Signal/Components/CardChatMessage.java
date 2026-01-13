@@ -12,6 +12,7 @@ public class CardChatMessage extends FlexLayout {
         this.addClassNames("chat-message");
 
         H3 header = new H3(name);
+        header.addClassName("chat-message__author");
 
         Span content = createMessage(message);
 

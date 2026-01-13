@@ -3,7 +3,6 @@ package com.example.Signal.Components;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -20,6 +19,7 @@ public class ScoreHistogram extends VerticalLayout {
     
     public ScoreHistogram(String personName, List<Integer> scores) {
         this.addClassName("score-histogram");
+        this.setWidth("320px"); // Fixed width to prevent stretching
         
         // Title
         H4 title = new H4(personName);
@@ -63,17 +63,7 @@ public class ScoreHistogram extends VerticalLayout {
             chartArea.add(bar);
         }
         
-        // X-axis labels
-        HorizontalLayout xAxisLabels = new HorizontalLayout();
-        xAxisLabels.addClassName("score-histogram__x-axis");
-        
-        for (int score = 1; score <= 7; score++) {
-            Span label = new Span(score == 7 ? "X" : String.valueOf(score));
-            label.addClassName("score-histogram__x-label");
-            xAxisLabels.add(label);
-        }
-        
-        chartContainer.add(chartArea, xAxisLabels);
+        chartContainer.add(chartArea);
         this.add(chartContainer);
     }
     
@@ -89,12 +79,12 @@ public class ScoreHistogram extends VerticalLayout {
     }
     
     /**
-     * Creates a single bar for the histogram
+     * Creates a single bar for the histogram with its label
      */
     private VerticalLayout createBar(int score, int count, int maxCount) {
         VerticalLayout barContainer = new VerticalLayout();
         barContainer.addClassName("score-histogram__bar-container");
-        barContainer.setWidth("30px"); // Must set in Java to override Vaadin's default 100% width
+        barContainer.setWidth("32px"); // Match CSS width
         barContainer.setPadding(false);
         barContainer.setSpacing(false);
         barContainer.setAlignItems(Alignment.CENTER);
@@ -113,14 +103,18 @@ public class ScoreHistogram extends VerticalLayout {
             barHeight = 5; // Minimum height for visibility
         }
         bar.setHeight(barHeight + "px");
-        bar.setWidth("30px");
+        bar.setWidth("32px"); // Match CSS width
         
         // Add spacer to push bar to bottom
         Div spacer = new Div();
         spacer.setHeight((MAX_BAR_HEIGHT - barHeight) + "px");
-        spacer.setWidth("30px");
+        spacer.setWidth("32px"); // Match CSS width
         
-        barContainer.add(countLabel, spacer, bar);
+        // X-axis label at the bottom
+        Span xLabel = new Span(score == 7 ? "X" : String.valueOf(score));
+        xLabel.addClassName("score-histogram__x-label");
+        
+        barContainer.add(countLabel, spacer, bar, xLabel);
         
         return barContainer;
     }
