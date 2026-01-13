@@ -18,11 +18,17 @@ public class CardChatMessage extends FlexLayout {
         this.add(header, content);
     }
 
-    public Span createMessage(String wordleText) {
+    /**
+     * parses the messages and creates spans around wordle emoji boxes for better visualization (removing gaps in between)
+     *
+     * @param message the whole message from the chat
+     * @return Span of the message with spans around lines with only wordle-boxes
+     */
+    public Span createMessage(String message) {
         Span chatmessage = new Span();
         chatmessage.setClassName("chat-message__content");
 
-        String[] lines = wordleText.split("\n");
+        String[] lines = message.split("\n");
 
         for (String line : lines) {
             if (isWordleLine(line)) {
@@ -37,6 +43,12 @@ public class CardChatMessage extends FlexLayout {
         return chatmessage;
     }
 
+    /**
+     * checks if a given text-line is a typical wordle line with those boxes
+     *
+     * @param line the string to parse
+     * @return true if the line consists of 5 of those emoji boxes (black/white-yellow-green)
+     */
     private boolean isWordleLine(String line) {
         String trimmed = line.trim();
         int emojiCount = 0;

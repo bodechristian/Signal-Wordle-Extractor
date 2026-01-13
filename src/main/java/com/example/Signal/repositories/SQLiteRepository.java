@@ -9,7 +9,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +70,7 @@ public class SQLiteRepository {
     }
 
     public List<GroupchatDataSignal> getGroups(String filename) {
-        log.info("Trying to read %s".formatted(filename));
+        log.info("Trying to read {}", filename);
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()

@@ -1,9 +1,10 @@
 package com.example.Signal.views;
 
-import com.example.Signal.Components.CardChatMessage;
+import com.example.Signal.Components.MessagesAccordionRow;
 import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
+import com.example.Signal.models.MessageTuple;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -14,10 +15,17 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Location;
+import com.vaadin.flow.router.OptionalParameter;
+import com.vaadin.flow.router.QueryParameters;
+import com.vaadin.flow.router.Route;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +35,7 @@ import static java.lang.Integer.min;
 @Route("/signal/chat")
 public class SignalChatView extends VerticalLayout implements HasUrlParameter<String> {
 
-    private final int chunksize = 10;
+    private final static int CHUNKSIZE = 10;
 
     SignalDataService signalDataService;
     DataRepository dataRepository;
@@ -68,20 +76,20 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         accordionSuper = new Accordion();
         accordionSuper.addClassName("chat-accordion-super");
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.add(new H3("tadaa"));
+        HorizontalLayout hlEvaluation = new HorizontalLayout();
+        hlEvaluation.add(new H3("tadaa"));
         accordionAllMessages = new Accordion();
-        accordionSuper.add("Statistics", hl);
+        accordionSuper.add("Statistics", hlEvaluation);
         accordionSuper.add("All Messages", accordionAllMessages);
 
         Button btnLoadMore = new Button("Load More");
         btnLoadMore.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
         btnLoadMore.addClickListener(e -> this.addAccordionMessages());
-        HorizontalLayout hl2 = new HorizontalLayout(btnLoadMore);
-        hl2.setWidthFull();
-        hl2.getStyle().set("justify-content", "center");
+        HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
+        hlLoadMore.setWidthFull();
+        hlLoadMore.getStyle().set("justify-content", "center");
 
-        contentContainer.add(accordionSuper, hl2);
+        contentContainer.add(accordionSuper, hlLoadMore);
 
         this.add(contentHeader, contentContainer);
     }
@@ -94,27 +102,35 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void addAccordionMessages() {
+        Map<String, List<MessageTuple>> dailyGames = this.getNextChunkAccordionMessages();
+        dailyGames.forEach((day, msgs) -> this.accordionAllMessages.add(day, new MessagesAccordionRow(msgs)));
+    }
+
+    private Map<String, List<MessageTuple>> getNextChunkAccordionMessages() {
         // loads one chunk of messages
         // currently does it for each group, which obviously is wrong and would load a lot when many groups
         // this gets fixed when reworking groups into 1 supergroup in dataRepository
+        Map<String, List<MessageTuple>> dailyGames = new HashMap<>();
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
-            int chunkStart = chunkidx * chunksize;
-            int chunkEnd = min(groupdata.days_played().size(),(chunkidx + 1) * chunksize);
-            if (chunkStart > groupdata.days_played().size()) { continue; }
+            int chunkStart = chunkidx * CHUNKSIZE;
+            int chunkEnd = min(groupdata.days_played().size(), (chunkidx + 1) * CHUNKSIZE);
+            if (chunkStart > groupdata.days_played().size()) {
+                continue;
+            }
 
             for (LocalDate day : groupdata.days_played().subList(chunkStart, chunkEnd)) {
-                HorizontalLayout rowDay = new HorizontalLayout();
-                rowDay.addClassName("chat-messages-row");
+                List<MessageTuple> dailyMsgs = new ArrayList<>();
                 for (GroupchatMember member : groupdata.members()) {
                     Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
                     if (msgs.containsKey(day)) {
-                        rowDay.add(new CardChatMessage(msgs.get(day).author(), msgs.get(day).message()));
+                        dailyMsgs.add(new MessageTuple(msgs.get(day).author(), msgs.get(day).message()));
                     }
                 }
-                accordionAllMessages.add(String.valueOf(day), rowDay);
+                dailyGames.put(String.valueOf(day), dailyMsgs);
             }
         }
         this.chunkidx += 1;
+        return dailyGames;
     }
 
     private void updateAccordionAllMessages() {
@@ -137,7 +153,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         filename = parametersMap.get("filename").getFirst();
         groupid = parametersMap.get("groupid").getFirst();
 
-        log.info("Received %s and %s".formatted(filename, groupid));
+        log.info("Received {} and {}", filename, groupid);
     }
 
     @Override

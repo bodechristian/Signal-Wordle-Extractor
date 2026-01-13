@@ -28,12 +28,12 @@ public class QueryManager {
 
     public static String getQuery(Querynames queryname) {
         if (!queries.containsKey(queryname)) {
-            log.error("Query " + queryname + " does not have an SQL query at the moment.");
+            log.error("Query {} does not have an SQL query at the moment.", queryname);
             return "";
         }
 
         if (queries.get(queryname).contains("%s")) {
-            log.error(queryname + " requires extra parameters and should be called by its specific function");
+            log.error("{} requires extra parameters and should be called by its specific function", queryname);
             return "";
         }
 
