@@ -1,6 +1,7 @@
 package com.example.Signal.views;
 
 import com.example.Signal.Components.MessagesAccordionRow;
+import com.example.Signal.Components.ScoreHistogram;
 import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.Signal.Utils.parseWordleScore;
 import static java.lang.Integer.min;
 
 @Slf4j
@@ -46,6 +48,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     Accordion accordionSuper;
     Accordion accordionAllMessages;
     MultiSelectComboBox<GroupchatData> multiselectChats;
+    HorizontalLayout hlEvaluation;
 
     private String filename;
     private String groupid;
@@ -76,8 +79,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         accordionSuper = new Accordion();
         accordionSuper.addClassName("chat-accordion-super");
-        HorizontalLayout hlEvaluation = new HorizontalLayout();
-        hlEvaluation.add(new H3("tadaa"));
+        hlEvaluation = new HorizontalLayout();
+        hlEvaluation.addClassName("evaluation-container");
+        hlEvaluation.setWidth("100%");
+        hlEvaluation.getStyle().set("overflow-x", "auto");
+        hlEvaluation.getStyle().set("flex-wrap", "nowrap");
         accordionAllMessages = new Accordion();
         accordionSuper.add("Statistics", hlEvaluation);
         accordionSuper.add("All Messages", accordionAllMessages);
@@ -86,8 +92,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         btnLoadMore.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
         btnLoadMore.addClickListener(e -> this.addAccordionMessages());
         HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
-        hlLoadMore.setWidthFull();
-        hlLoadMore.getStyle().set("justify-content", "center");
+        hlLoadMore.addClassName("load-more-container");
 
         contentContainer.add(accordionSuper, hlLoadMore);
 
@@ -141,7 +146,57 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     private void updatePage() {
         this.updateMultiselectGroups();
+        this.updateEvaluation();
         this.updateAccordionAllMessages();
+    }
+
+    /**
+     * Aggregates Wordle scores by person from active groups
+     * @return Map of person name to their list of scores
+     */
+    private Map<String, List<Integer>> aggregateScoresByPerson() {
+        Map<String, List<Integer>> personScores = new HashMap<>();
+        
+        for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
+            for (GroupchatMember member : groupdata.members()) {
+                String personName = member.getName();
+                Map<LocalDate, GroupchatMessage> messages = member.getMessages();
+                
+                for (GroupchatMessage message : messages.values()) {
+                    int score = parseWordleScore(message.message());
+                    if (score != -1) { // Valid score
+                        personScores.computeIfAbsent(personName, k -> new ArrayList<>()).add(score);
+                    }
+                }
+            }
+        }
+        
+        return personScores;
+    }
+
+    /**
+     * Updates the evaluation section with score histograms for each person
+     */
+    private void updateEvaluation() {
+        hlEvaluation.removeAll();
+        
+        if (dataRepository.getActiveGroups().isEmpty()) {
+            hlEvaluation.add(new H3("Select groups to see statistics"));
+            return;
+        }
+        
+        Map<String, List<Integer>> personScores = aggregateScoresByPerson();
+        
+        if (personScores.isEmpty()) {
+            hlEvaluation.add(new H3("No Wordle scores found in selected groups"));
+            return;
+        }
+        
+        // Create a histogram for each person
+        for (Map.Entry<String, List<Integer>> entry : personScores.entrySet()) {
+            ScoreHistogram histogram = new ScoreHistogram(entry.getKey(), entry.getValue());
+            hlEvaluation.add(histogram);
+        }
     }
 
     private void saveQueryParameters(BeforeEvent beforeEvent) {
