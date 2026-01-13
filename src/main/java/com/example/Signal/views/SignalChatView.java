@@ -2,6 +2,7 @@ package com.example.Signal.views;
 
 import com.example.Signal.Components.MessagesAccordionRow;
 import com.example.Signal.Components.ScoreHistogram;
+import com.example.Signal.models.EvaluationTimeframe;
 import com.example.Signal.models.GroupchatData;
 import com.example.Signal.models.GroupchatMember;
 import com.example.Signal.models.GroupchatMessage;
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Location;
@@ -39,16 +41,17 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     private final static int CHUNKSIZE = 10;
 
-    SignalDataService signalDataService;
-    DataRepository dataRepository;
+    private final SignalDataService signalDataService;
+    private final DataRepository dataRepository;
 
-    HorizontalLayout contentHeader;
-    VerticalLayout contentContainer;
+    private final HorizontalLayout contentHeader;
+    private final VerticalLayout contentContainer;
 
-    Accordion accordionSuper;
-    Accordion accordionAllMessages;
-    MultiSelectComboBox<GroupchatData> multiselectChats;
-    HorizontalLayout hlEvaluation;
+    private final Accordion accordionSuper;
+    private final Accordion accordionAllMessages;
+    private final MultiSelectComboBox<GroupchatData> multiselectChats;
+    private final HorizontalLayout hlEvaluation;
+    private final Select<EvaluationTimeframe> selectTimeframe;
 
     private String filename;
     private String groupid;
@@ -79,13 +82,34 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         accordionSuper = new Accordion();
         accordionSuper.addClassName("chat-accordion-super");
+
+        // Create statistics panel with timeframe selector
+        VerticalLayout statisticsPanel = new VerticalLayout();
+        statisticsPanel.setPadding(false);
+        statisticsPanel.setSpacing(true);
+
+        // Timeframe selector
+        selectTimeframe = new Select<>();
+        selectTimeframe.setLabel("Timeframe");
+        selectTimeframe.setItems(EvaluationTimeframe.values());
+        selectTimeframe.setValue(EvaluationTimeframe.ALL_TIME);
+        selectTimeframe.addValueChangeListener(event -> {
+            if (!event.isFromClient()) {
+                return; // ignore programmatic changes
+            }
+            this.updateEvaluation();
+        });
+        selectTimeframe.setWidth("200px");
+
+        // Histograms container
         hlEvaluation = new HorizontalLayout();
         hlEvaluation.addClassName("evaluation-container");
         hlEvaluation.setWidth("100%");
-        hlEvaluation.getStyle().set("overflow-x", "auto");
-        hlEvaluation.getStyle().set("flex-wrap", "nowrap");
+
+        statisticsPanel.add(selectTimeframe, hlEvaluation);
+
         accordionAllMessages = new Accordion();
-        accordionSuper.add("Statistics", hlEvaluation);
+        accordionSuper.add("Statistics", statisticsPanel);
         accordionSuper.add("All Messages", accordionAllMessages);
 
         Button btnLoadMore = new Button("Load More");
@@ -151,18 +175,28 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     /**
-     * Aggregates Wordle scores by person from active groups
+     * Aggregates Wordle scores by person from active groups within the specified timeframe
+     * @param timeframe The timeframe enum value to filter messages
      * @return Map of person name to their list of scores
      */
-    private Map<String, List<Integer>> aggregateScoresByPerson() {
+    private Map<String, List<Integer>> aggregateScoresByPerson(EvaluationTimeframe timeframe) {
         Map<String, List<Integer>> personScores = new HashMap<>();
-        
+        LocalDate cutoffDate = timeframe.getCutoffDate();
+
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
             for (GroupchatMember member : groupdata.members()) {
                 String personName = member.getName();
                 Map<LocalDate, GroupchatMessage> messages = member.getMessages();
-                
-                for (GroupchatMessage message : messages.values()) {
+
+                for (Map.Entry<LocalDate, GroupchatMessage> entry : messages.entrySet()) {
+                    LocalDate messageDate = entry.getKey();
+                    GroupchatMessage message = entry.getValue();
+
+                    // Filter by timeframe
+                    if (messageDate.isBefore(cutoffDate)) {
+                        continue;
+                    }
+
                     int score = parseWordleScore(message.message());
                     if (score != -1) { // Valid score
                         personScores.computeIfAbsent(personName, k -> new ArrayList<>()).add(score);
@@ -170,28 +204,29 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                 }
             }
         }
-        
+
         return personScores;
     }
-
+    
     /**
      * Updates the evaluation section with score histograms for each person
      */
     private void updateEvaluation() {
         hlEvaluation.removeAll();
-        
+
         if (dataRepository.getActiveGroups().isEmpty()) {
             hlEvaluation.add(new H3("Select groups to see statistics"));
             return;
         }
-        
-        Map<String, List<Integer>> personScores = aggregateScoresByPerson();
-        
+
+        EvaluationTimeframe selectedTimeframe = selectTimeframe.getValue();
+        Map<String, List<Integer>> personScores = aggregateScoresByPerson(selectedTimeframe);
+
         if (personScores.isEmpty()) {
             hlEvaluation.add(new H3("No Wordle scores found in selected groups"));
             return;
         }
-        
+
         // Create a histogram for each person
         for (Map.Entry<String, List<Integer>> entry : personScores.entrySet()) {
             ScoreHistogram histogram = new ScoreHistogram(entry.getKey(), entry.getValue());
