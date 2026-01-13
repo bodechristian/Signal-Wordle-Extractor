@@ -13,6 +13,7 @@ import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -41,17 +42,20 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     private final static int CHUNKSIZE = 10;
 
-    private final SignalDataService signalDataService;
-    private final DataRepository dataRepository;
+    SignalDataService signalDataService;
+    DataRepository dataRepository;
 
-    private final HorizontalLayout contentHeader;
-    private final VerticalLayout contentContainer;
+    HorizontalLayout contentHeader;
+    VerticalLayout contentContainer;
 
-    private final Accordion accordionSuper;
-    private final Accordion accordionAllMessages;
-    private final MultiSelectComboBox<GroupchatData> multiselectChats;
-    private final HorizontalLayout hlEvaluation;
-    private final Select<EvaluationTimeframe> selectTimeframe;
+    Accordion accordionSuper;
+    Accordion accordionAllMessages;
+    MultiSelectComboBox<GroupchatData> multiselectChats;
+    HorizontalLayout hlEvaluation;
+    Select<EvaluationTimeframe> selectTimeframe;
+    DatePicker datePickerFrom;
+    DatePicker datePickerTo;
+    HorizontalLayout hlCustomDateRange;
 
     private String filename;
     private String groupid;
@@ -97,16 +101,40 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             if (!event.isFromClient()) {
                 return; // ignore programmatic changes
             }
+            updateCustomDateRangeVisibility();
             this.updateEvaluation();
         });
         selectTimeframe.setWidth("200px");
+        
+        // Custom date range pickers
+        datePickerFrom = new DatePicker("From");
+        datePickerFrom.setValue(LocalDate.now().minusDays(30));
+        datePickerFrom.addValueChangeListener(event -> {
+            if (event.isFromClient()) {
+                this.updateEvaluation();
+            }
+        });
+        datePickerFrom.setWidth("150px");
+        
+        datePickerTo = new DatePicker("To");
+        datePickerTo.setValue(LocalDate.now());
+        datePickerTo.addValueChangeListener(event -> {
+            if (event.isFromClient()) {
+                this.updateEvaluation();
+            }
+        });
+        datePickerTo.setWidth("150px");
+        
+        hlCustomDateRange = new HorizontalLayout(datePickerFrom, datePickerTo);
+        hlCustomDateRange.setVisible(false);
+        hlCustomDateRange.setSpacing(true);
 
         // Histograms container
         hlEvaluation = new HorizontalLayout();
         hlEvaluation.addClassName("evaluation-container");
         hlEvaluation.setWidth("100%");
 
-        statisticsPanel.add(selectTimeframe, hlEvaluation);
+        statisticsPanel.add(selectTimeframe, hlCustomDateRange, hlEvaluation);
 
         accordionAllMessages = new Accordion();
         accordionSuper.add("Statistics", statisticsPanel);
@@ -181,7 +209,20 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
      */
     private Map<String, List<Integer>> aggregateScoresByPerson(EvaluationTimeframe timeframe) {
         Map<String, List<Integer>> personScores = new HashMap<>();
-        LocalDate cutoffDate = timeframe.getCutoffDate();
+        
+        // Determine cutoff date
+        LocalDate cutoffDate;
+        LocalDate endDate = LocalDate.now();
+        
+        if (timeframe.isCustomRange()) {
+            cutoffDate = datePickerFrom.getValue();
+            endDate = datePickerTo.getValue();
+            if (cutoffDate == null || endDate == null) {
+                return personScores; // Empty map if dates not set
+            }
+        } else {
+            cutoffDate = timeframe.getCutoffDate();
+        }
 
         for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
             for (GroupchatMember member : groupdata.members()) {
@@ -193,7 +234,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                     GroupchatMessage message = entry.getValue();
 
                     // Filter by timeframe
-                    if (messageDate.isBefore(cutoffDate)) {
+                    if (messageDate.isBefore(cutoffDate) || messageDate.isAfter(endDate)) {
                         continue;
                     }
 
@@ -206,6 +247,14 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         }
 
         return personScores;
+    }
+    
+    /**
+     * Updates the visibility of the custom date range pickers based on selected timeframe
+     */
+    private void updateCustomDateRangeVisibility() {
+        EvaluationTimeframe selected = selectTimeframe.getValue();
+        hlCustomDateRange.setVisible(selected != null && selected.isCustomRange());
     }
     
     /**

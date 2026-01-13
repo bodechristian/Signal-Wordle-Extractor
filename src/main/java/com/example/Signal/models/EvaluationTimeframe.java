@@ -14,7 +14,8 @@ public enum EvaluationTimeframe {
     LAST_7_DAYS("Last 7 days", 7),
     LAST_30_DAYS("Last 30 days", 30),
     LAST_90_DAYS("Last 90 days", 90),
-    LAST_365_DAYS("Last 365 days", 365);
+    LAST_365_DAYS("Last 365 days", 365),
+    CUSTOM_RANGE("Custom range", -1);
     
     private final String displayName;
     private final int days;
@@ -25,10 +26,21 @@ public enum EvaluationTimeframe {
     }
     
     /**
+     * @return true if this timeframe requires custom date input
+     */
+    public boolean isCustomRange() {
+        return this == CUSTOM_RANGE;
+    }
+    
+    /**
      * Calculates the cutoff date for this timeframe.
-     * @return The cutoff date to filter messages
+     * Note: For CUSTOM_RANGE, this returns null and custom dates should be used instead.
+     * @return The cutoff date to filter messages, or null for custom range
      */
     public LocalDate getCutoffDate() {
+        if (isCustomRange()) {
+            return null;
+        }
         return LocalDate.now().minusDays(days);
     }
     
