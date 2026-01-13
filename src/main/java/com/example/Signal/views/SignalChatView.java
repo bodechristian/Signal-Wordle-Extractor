@@ -160,7 +160,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     private void addAccordionMessages() {
         Map<String, List<MessageTuple>> dailyGames = this.getNextChunkAccordionMessages();
-        dailyGames.forEach((day, msgs) -> this.accordionAllMessages.add(day, new MessagesAccordionRow(msgs)));
+        
+        // Sort by date (most recent first) before adding to accordion
+        dailyGames.entrySet().stream()
+                .sorted((e1, e2) -> LocalDate.parse(e2.getKey()).compareTo(LocalDate.parse(e1.getKey())))
+                .forEach(entry -> this.accordionAllMessages.add(entry.getKey(), new MessagesAccordionRow(entry.getValue())));
     }
 
     private Map<String, List<MessageTuple>> getNextChunkAccordionMessages() {
