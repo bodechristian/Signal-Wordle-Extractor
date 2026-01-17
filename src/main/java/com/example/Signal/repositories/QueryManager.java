@@ -2,6 +2,7 @@ package com.example.Signal.repositories;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,23 +15,25 @@ public class QueryManager {
     private static final Map<Querynames, String> queries = Map.ofEntries(
             Map.entry(Querynames.GETOWNERID, "SELECT json FROM items WHERE id = 'uuid_id'"),
             Map.entry(Querynames.GETUSERSNAME, "SELECT profileFullName FROM conversations WHERE serviceId = '%s'"),
-            Map.entry(Querynames.GETDMS, """
+            Map.entry(Querynames.GETALLCHATROOMS, """
                     SELECT id,
                            COALESCE(NULLIF(name, ''), NULLIF(profileFullName, ''), 'Unknown') as name,
-                           serviceId as members
+                           type,
+                           CASE
+                               WHEN type = 'private' THEN serviceId
+                               WHEN type = 'group' THEN members
+                               ELSE ''
+                           END as members
                     FROM conversations
-                    WHERE conversations.type = 'private'
-                    AND profileName IS NOT NULL
-                    AND profileName != ''"""),
-            Map.entry(Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'"),
-            Map.entry(Querynames.GETCHATROOMMESSAGES, """
-                    SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at
+                    WHERE (type = 'group' OR (type = 'private' AND profileName IS NOT NULL AND profileName != ''))"""),
+            Map.entry(Querynames.GETALLCHATROOMMESSAGES, """
+                    SELECT messages.conversationId, conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at
                     FROM messages
                     LEFT JOIN conversations
                     ON messages.sourceServiceId = conversations.serviceId
-                    WHERE messages.conversationId = '%s'
+                    WHERE messages.conversationId IN (%s)
                     AND messages.body GLOB 'Wordle [0-9.,]* [1-6X]/6*'
-                    ORDER BY messages.sent_at DESC""")
+                    ORDER BY messages.conversationId, messages.sent_at DESC""")
     );
 
     public static String getQuery(Querynames queryname) {
@@ -51,7 +54,18 @@ public class QueryManager {
         return queries.get(Querynames.GETUSERSNAME).formatted(userId);
     }
 
-    public static String getChatroomMessagesQuery(String chatroomId) {
-        return queries.get(Querynames.GETCHATROOMMESSAGES).formatted(chatroomId);
+    /**
+     * Generates a query to fetch all messages from multiple chatrooms at once.
+     * 
+     * @param chatroomIds List of chatroom IDs to fetch messages for
+     * @return SQL query for all messages for the given chatroom IDs
+     */
+    public static String getAllChatroomMessagesQuery(List<String> chatroomIds) {
+        String idsString = chatroomIds.stream()
+                .map(id -> "'" + id.replace("'", "''") + "'")  // Escape single quotes
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+        
+        return queries.get(Querynames.GETALLCHATROOMMESSAGES).formatted(idsString);
     }
 }

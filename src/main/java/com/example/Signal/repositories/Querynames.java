@@ -6,9 +6,8 @@ import lombok.Getter;
 public enum Querynames {
     GETOWNERID("getOwnerId"),
     GETUSERSNAME("getOwnerName"),
-    GETDMS("getDms"),
-    GETGROUPS("getGroups"),
-    GETCHATROOMMESSAGES("getChatroomMessages");
+    GETALLCHATROOMS("getAllChatrooms"),
+    GETALLCHATROOMMESSAGES("getAllChatroomMessages");
 
     private final String value;
 

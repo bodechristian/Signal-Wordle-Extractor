@@ -2,7 +2,6 @@ package com.example.Signal.repositories;
 
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMessage;
-import com.example.Signal.models.ChatroomType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +16,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.Signal.Utils.PATHTODBS;
 
@@ -70,16 +71,21 @@ public class SQLiteRepository {
         }
     }
 
-    public List<ChatroomDataSignal> getChatrooms(String filename, ChatroomType type) {
-        log.info("Trying to read {} chatrooms from {}", type, filename);
+    /**
+     * Retrieves all chatrooms (both groups and DMs) from the database.
+     * 
+     * @param filename The database filename
+     * @return List of all chatrooms
+     */
+    public List<ChatroomDataSignal> getAllChatrooms(String filename) {
+        log.info("Reading all chatrooms from {}", filename);
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            Querynames queryName = type == ChatroomType.GROUP ? Querynames.GETGROUPS : Querynames.GETDMS;
-            ResultSet rs = statement.executeQuery(QueryManager.getQuery(queryName));
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETALLCHATROOMS));
 
             // Parse query result
             List<ChatroomDataSignal> chatroomList = new ArrayList<>();
@@ -87,7 +93,6 @@ public class SQLiteRepository {
                 chatroomList.add(new ChatroomDataSignal(
                         rs.getString("id"),
                         rs.getString("name"),
-                        type,
                         rs.getString("members")
                 ));
             }
@@ -95,37 +100,45 @@ public class SQLiteRepository {
             rs.close();
             return chatroomList;
         } catch (SQLException e) {
-            log.error(e.getMessage());
+            log.error("Failed to retrieve chatrooms", e);
             return Collections.emptyList();
         }
     }
-
-    public List<ChatroomMessage> getChatroomMessages(String filename, String chatroomId) {
-        log.info("Filename: {}", filename);
+    
+    /**
+     * Retrieves all messages for multiple chatrooms in a single query.
+     * 
+     * @param filename The database filename
+     * @param chatroomIds List of chatroom IDs to fetch messages for
+     * @return Map of chatroom ID to list of messages
+     */
+    public Map<String, List<ChatroomMessage>> getAllChatroomMessages(String filename, List<String> chatroomIds) {
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getChatroomMessagesQuery(chatroomId));
+            ResultSet rs = statement.executeQuery(QueryManager.getAllChatroomMessagesQuery(chatroomIds));
 
-            // Parse query result
-            List<ChatroomMessage> messages = new ArrayList<>();
+            Map<String, List<ChatroomMessage>> messagesByChatroom = new HashMap<>();
             while (rs.next()) {
-                messages.add(new ChatroomMessage(
+                String chatroomId = rs.getString("conversationId");
+                ChatroomMessage message = new ChatroomMessage(
                         rs.getString("serviceId"),
                         rs.getString("profileFullName"),
                         rs.getString("body"),
                         rs.getString("sent_at")
-                ));
+                );
+                
+                messagesByChatroom.computeIfAbsent(chatroomId, k -> new ArrayList<>()).add(message);
             }
 
             rs.close();
-            return messages;
+            return messagesByChatroom;
         } catch (SQLException e) {
-            log.error(e.getMessage());
-            return Collections.emptyList();
+            log.error("Failed to batch retrieve messages for chatrooms", e);
+            return Collections.emptyMap();
         }
     }
 }

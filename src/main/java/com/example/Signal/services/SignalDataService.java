@@ -3,7 +3,6 @@ package com.example.Signal.services;
 import com.example.Signal.CommandExecutor;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMessage;
-import com.example.Signal.models.ChatroomType;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.repositories.SQLiteRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,7 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.Signal.Utils.PATHTODBS;
 
@@ -37,7 +37,7 @@ public class SignalDataService {
         try {
             String template = Files.readString(Path.of("unencryptDB-template.sql"));
             template = template.replace("INSERTKEY", decryptionKey)
-                    .replace("INSERTFILENAME", PATHTODBS+outputFilename);
+                    .replace("INSERTFILENAME", PATHTODBS + outputFilename);
             Files.writeString(Path.of("unencryptDB.sql"), template);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -45,7 +45,7 @@ public class SignalDataService {
         }
 
         // 2nd execute sql file IN SQLCIPHER to create plaintext.db
-        String command = String.format("sqlcipher %s < unencryptDB.sql", PATHTODBS+filename);
+        String command = String.format("sqlcipher %s < unencryptDB.sql", PATHTODBS + filename);
         try {
             commandExecutor.executeBash(command);
         } catch (IOException | InterruptedException e) {
@@ -55,29 +55,46 @@ public class SignalDataService {
         return outputFilename;
     }
 
-    public void loadChatrooms(List<ChatroomDataSignal> chatrooms, String filename) {
+    /**
+     * Loads all messages from the given chatrooms from the DB and adds those to the data structure
+     *
+     * @param chatrooms List of chatrooms to load messages for
+     * @param filename  The database filename
+     */
+    public void loadChatroomsIntoDataRepository(List<ChatroomDataSignal> chatrooms, String filename) {
+        if (chatrooms == null || chatrooms.isEmpty()) {
+            log.info("No chatrooms to load");
+            return;
+        }
+
+        List<String> chatroomIds = chatrooms.stream().map(ChatroomDataSignal::id).toList();
+
+        Map<String, List<ChatroomMessage>> messagesByChatroom = sqLiteRepository.getAllChatroomMessages(filename,
+                                                                                                        chatroomIds);
+
         for (ChatroomDataSignal chatroom : chatrooms) {
-            List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroom.id());
+            List<ChatroomMessage> msgs = messagesByChatroom.getOrDefault(chatroom.id(), List.of());
             dataStructureService.addChatroomWithMessages(chatroom, msgs);
         }
     }
 
     public void detectAndSetOwner(String filename) {
-        // set owner of DB - as his name is just null elsewhere in DB
+        // set owner of DB - as his name is just null some messages in DB
         String ownerId = sqLiteRepository.getOwnerId(filename);
         dataRepository.setOwnerId(ownerId);
         String ownerName = sqLiteRepository.getUsersName(filename, ownerId);
         dataRepository.setOwnerName(ownerName);
     }
 
+    /**
+     * Loads all chatrooms (both groups and DMs) from the database.
+     * Uses a single query to fetch all chatroom types, then batch loads their messages.
+     *
+     * @param filename The database filename
+     */
     public void loadAllChatrooms(String filename) {
         detectAndSetOwner(filename);
-
-        // Load both group chats and DMs
-        List<ChatroomDataSignal> allGroupsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.GROUP);
-        List<ChatroomDataSignal> allDMsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.PRIVATE);
-
-        this.loadChatrooms(allGroupsFromFile, filename);
-        this.loadChatrooms(allDMsFromFile, filename);
+        List<ChatroomDataSignal> allChatrooms = sqLiteRepository.getAllChatrooms(filename);
+        loadChatroomsIntoDataRepository(allChatrooms, filename);
     }
 }

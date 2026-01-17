@@ -4,7 +4,6 @@ import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMember;
 import com.example.Signal.models.ChatroomMessage;
-import com.example.Signal.models.ChatroomType;
 import com.example.Signal.repositories.DataRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,6 @@ public class DataStructureService {
         List<LocalDate> days_played = this.getDaysPlayed(members);
         ChatroomData newChatroomData = new ChatroomData(chatroomData.id(),
                                                         chatroomData.name(),
-                                                        chatroomData.type(),
                                                         members,
                                                         days_played);
         log.info("added %s".formatted(String.valueOf(newChatroomData)));
@@ -161,7 +159,6 @@ public class DataStructureService {
 
         return new ChatroomData("super-chatroom",
                                 consolidatedName,
-                                ChatroomType.SUPERGROUP,
                                 consolidatedMembers,
                                 daysPlayed);
     }
