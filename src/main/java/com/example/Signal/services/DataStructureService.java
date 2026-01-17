@@ -50,11 +50,11 @@ public class DataStructureService {
     }
 
     private List<LocalDate> getDaysPlayed(List<ChatroomMember> members) {
-        Set<LocalDate> days_played = new HashSet<>(Set.of());
+        Set<LocalDate> days_played = new HashSet<>();
         for (ChatroomMember member : members) {
             days_played.addAll(member.getMessages().keySet());
         }
-        List<LocalDate> d = new ArrayList<>(days_played.stream().toList());
+        List<LocalDate> d = new ArrayList<>(days_played);
         d.sort(Collections.reverseOrder());
         return d;
     }

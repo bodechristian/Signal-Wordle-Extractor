@@ -1,5 +1,6 @@
 package com.example.Signal.services;
 
+import com.example.Signal.CommandExecutor;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMessage;
 import com.example.Signal.models.ChatroomType;
@@ -17,7 +18,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import static com.example.Signal.Utils.PATHTODBS;
-import static com.example.Signal.Utils.commandRunner;
 
 @Slf4j
 @Service
@@ -27,6 +27,7 @@ public class SignalDataService {
     private final SQLiteRepository sqLiteRepository;
     private final DataRepository dataRepository;
     private final DataStructureService dataStructureService;
+    private final CommandExecutor commandExecutor;
 
     public String decryptDB(String filename, String decryptionKey) throws IOException, InterruptedException {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
@@ -46,7 +47,7 @@ public class SignalDataService {
         // 2nd execute sql file IN SQLCIPHER to create plaintext.db
         String command = String.format("sqlcipher %s < unencryptDB.sql", PATHTODBS+filename);
         try {
-            commandRunner(command);
+            commandExecutor.executeBash(command);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

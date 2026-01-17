@@ -1,6 +1,5 @@
 package com.example.Signal.components;
 
-import com.example.Signal.Utils;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -31,7 +30,7 @@ public class CardChatMessage extends FlexLayout {
         String[] lines = message.split("\n");
 
         for (String line : lines) {
-            if (Utils.isWordleLine(line)) {
+            if (isWordleLine(line)) {
                 Span emojiLine = new Span(line);
                 emojiLine.setClassName("emoji-line");
                 chatmessage.add(emojiLine);
@@ -41,5 +40,40 @@ public class CardChatMessage extends FlexLayout {
         }
 
         return chatmessage;
+    }
+
+    /**
+     * checks if a given text-line is a typical wordle line with those boxes
+     *
+     * @param line the string to parse
+     * @return true if the line consists of 5 of those emoji boxes (black/white-yellow-green)
+     */
+    public boolean isWordleLine(String line) {
+        String trimmed = line.trim();
+        int emojiCount = 0;
+        int i = 0;
+
+        while (i < trimmed.length()) {
+            char c = trimmed.charAt(i);
+
+            if (c == '\uD83D' && i + 1 < trimmed.length()) {
+                // Surrogate pair emoji (yellow, green)
+                char low = trimmed.charAt(i + 1);
+                if (low == '\uDFE8' || low == '\uDFE9') {
+                    emojiCount++;
+                    i += 2;
+                } else {
+                    return false;
+                }
+            } else if (c == '⬜' || c == '⬛') {
+                // Single char emoji (white, black squares)
+                emojiCount++;
+                i += 1;
+            } else {
+                return false;
+            }
+        }
+
+        return emojiCount == 5;
     }
 }

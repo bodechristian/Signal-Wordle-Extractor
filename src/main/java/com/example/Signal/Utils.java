@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -12,18 +11,6 @@ import java.time.ZoneId;
 @Slf4j
 public class Utils {
     public final static String PATHTODBS = "DBs/";
-
-    public static void commandRunner(String command) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
-        try {
-            Process process = pb.start();
-            int exitCode = process.waitFor();
-            log.info("ExitCode: " + exitCode);
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
 
     public static void writeToFile(String filepath, byte[] data) {
         try {
@@ -71,40 +58,5 @@ public class Utils {
         }
 
         return -1;
-    }
-
-    /**
-     * checks if a given text-line is a typical wordle line with those boxes
-     *
-     * @param line the string to parse
-     * @return true if the line consists of 5 of those emoji boxes (black/white-yellow-green)
-     */
-    public static boolean isWordleLine(String line) {
-        String trimmed = line.trim();
-        int emojiCount = 0;
-        int i = 0;
-
-        while (i < trimmed.length()) {
-            char c = trimmed.charAt(i);
-
-            if (c == '\uD83D' && i + 1 < trimmed.length()) {
-                // Surrogate pair emoji (yellow, green)
-                char low = trimmed.charAt(i + 1);
-                if (low == '\uDFE8' || low == '\uDFE9') {
-                    emojiCount++;
-                    i += 2;
-                } else {
-                    return false;
-                }
-            } else if (c == '⬜' || c == '⬛') {
-                // Single char emoji (white, black squares)
-                emojiCount++;
-                i += 1;
-            } else {
-                return false;
-            }
-        }
-
-        return emojiCount == 5;
     }
 }
