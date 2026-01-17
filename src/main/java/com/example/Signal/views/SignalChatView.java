@@ -3,9 +3,9 @@ package com.example.Signal.views;
 import com.example.Signal.Components.MessagesAccordionRow;
 import com.example.Signal.Components.ScoreHistogram;
 import com.example.Signal.models.EvaluationTimeframe;
-import com.example.Signal.models.GroupchatData;
-import com.example.Signal.models.GroupchatMember;
-import com.example.Signal.models.GroupchatMessage;
+import com.example.Signal.models.ChatroomData;
+import com.example.Signal.models.ChatroomMember;
+import com.example.Signal.models.ChatroomMessage;
 import com.example.Signal.models.MessageTuple;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
@@ -50,7 +50,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     Accordion accordionSuper;
     Accordion accordionAllMessages;
-    MultiSelectComboBox<GroupchatData> multiselectChats;
+    MultiSelectComboBox<ChatroomData> multiselectChats;
     HorizontalLayout hlEvaluation;
     Select<EvaluationTimeframe> selectTimeframe;
     DatePicker datePickerFrom;
@@ -70,12 +70,13 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         // Header
         contentHeader = new HorizontalLayout();
         multiselectChats = new MultiSelectComboBox<>();
-        multiselectChats.setItemLabelGenerator(GroupchatData::name);
+        multiselectChats.setLabel("Select conversations");
+        multiselectChats.setItemLabelGenerator(ChatroomData::name);
         multiselectChats.addValueChangeListener(event -> {
             if (!event.isFromClient()) {
                 return; // ignore programmatic changes
             }
-            dataRepository.setActiveGroups(event.getValue());
+            dataRepository.setActiveChatrooms(event.getValue());
             this.updatePage();
         });
         contentHeader.add(multiselectChats);
@@ -161,10 +162,10 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void updateMultiselectGroups() {
-        List<GroupchatData> allGroups = dataRepository.getAllGroups();
+        List<ChatroomData> allChatrooms = dataRepository.getAllChatrooms();
 
-        multiselectChats.setItems(allGroups);
-        multiselectChats.setValue(dataRepository.getActiveGroups());
+        multiselectChats.setItems(allChatrooms);
+        multiselectChats.setValue(dataRepository.getActiveChatrooms());
     }
 
     private void addAccordionMessages() {
@@ -181,17 +182,17 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         // currently does it for each group, which obviously is wrong and would load a lot when many groups
         // this gets fixed when reworking groups into 1 supergroup in dataRepository
         Map<String, List<MessageTuple>> dailyGames = new HashMap<>();
-        for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
+        for (ChatroomData chatroomData : dataRepository.getActiveChatrooms()) {
             int chunkStart = chunkidx * CHUNKSIZE;
-            int chunkEnd = min(groupdata.days_played().size(), (chunkidx + 1) * CHUNKSIZE);
-            if (chunkStart > groupdata.days_played().size()) {
+            int chunkEnd = min(chatroomData.days_played().size(), (chunkidx + 1) * CHUNKSIZE);
+            if (chunkStart > chatroomData.days_played().size()) {
                 continue;
             }
 
-            for (LocalDate day : groupdata.days_played().subList(chunkStart, chunkEnd)) {
+            for (LocalDate day : chatroomData.days_played().subList(chunkStart, chunkEnd)) {
                 List<MessageTuple> dailyMsgs = new ArrayList<>();
-                for (GroupchatMember member : groupdata.members()) {
-                    Map<LocalDate, GroupchatMessage> msgs = member.getMessages();
+                for (ChatroomMember member : chatroomData.members()) {
+                    Map<LocalDate, ChatroomMessage> msgs = member.getMessages();
                     if (msgs.containsKey(day)) {
                         dailyMsgs.add(new MessageTuple(msgs.get(day).author(), msgs.get(day).message()));
                     }
@@ -216,7 +217,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     /**
-     * Aggregates Wordle scores by person from active groups within the specified timeframe
+     * Aggregates Wordle scores by person from active chatrooms within the specified timeframe
      * @param timeframe The timeframe enum value to filter messages
      * @return Map of person name to their list of scores
      */
@@ -237,14 +238,14 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             cutoffDate = timeframe.getCutoffDate();
         }
 
-        for (GroupchatData groupdata : dataRepository.getActiveGroups()) {
-            for (GroupchatMember member : groupdata.members()) {
+        for (ChatroomData chatroomData : dataRepository.getActiveChatrooms()) {
+            for (ChatroomMember member : chatroomData.members()) {
                 String personName = member.getName();
-                Map<LocalDate, GroupchatMessage> messages = member.getMessages();
+                Map<LocalDate, ChatroomMessage> messages = member.getMessages();
 
-                for (Map.Entry<LocalDate, GroupchatMessage> entry : messages.entrySet()) {
+                for (Map.Entry<LocalDate, ChatroomMessage> entry : messages.entrySet()) {
                     LocalDate messageDate = entry.getKey();
-                    GroupchatMessage message = entry.getValue();
+                    ChatroomMessage message = entry.getValue();
 
                     // Filter by timeframe
                     if (messageDate.isBefore(cutoffDate) || messageDate.isAfter(endDate)) {
@@ -276,8 +277,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     private void updateEvaluation() {
         hlEvaluation.removeAll();
 
-        if (dataRepository.getActiveGroups().isEmpty()) {
-            hlEvaluation.add(new H3("Select groups to see statistics"));
+        if (dataRepository.getActiveChatrooms().isEmpty()) {
+            hlEvaluation.add(new H3("Select conversations to see statistics"));
             return;
         }
 
@@ -285,7 +286,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         Map<String, List<Integer>> personScores = aggregateScoresByPerson(selectedTimeframe);
 
         if (personScores.isEmpty()) {
-            hlEvaluation.add(new H3("No Wordle scores found in selected groups"));
+            hlEvaluation.add(new H3("No Wordle scores found in selected conversations"));
             return;
         }
 
@@ -314,8 +315,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         saveQueryParameters(beforeEvent);
 
-        signalDataService.loadAllGroups(filename);
-        dataRepository.setGroupActive(groupid);
+        signalDataService.loadAllChatrooms(filename);
+        dataRepository.setChatroomActive(groupid);
 
         this.updatePage();
     }

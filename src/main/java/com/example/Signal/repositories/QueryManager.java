@@ -11,19 +11,26 @@ import java.util.Map;
  */
 @Slf4j
 public class QueryManager {
-    private static final Map<Querynames, String> queries = Map.of(
-            Querynames.GETOWNERID, "SELECT json FROM items WHERE id = 'uuid_id'",
-            Querynames.GETUSERSNAME, "SELECT profileFullName FROM conversations WHERE serviceId = '%s'",
-            Querynames.GETDMS, "SELECT serviceId, profileFullName FROM conversations WHERE conversations.type = 'private'",// TODO
-            Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'",
-            Querynames.GETGROUPSMESSAGES, """
+    private static final Map<Querynames, String> queries = Map.ofEntries(
+            Map.entry(Querynames.GETOWNERID, "SELECT json FROM items WHERE id = 'uuid_id'"),
+            Map.entry(Querynames.GETUSERSNAME, "SELECT profileFullName FROM conversations WHERE serviceId = '%s'"),
+            Map.entry(Querynames.GETDMS, """
+                    SELECT id,
+                           COALESCE(NULLIF(name, ''), NULLIF(profileFullName, ''), 'Unknown') as name,
+                           serviceId as members
+                    FROM conversations
+                    WHERE conversations.type = 'private'
+                    AND profileName IS NOT NULL
+                    AND profileName != ''"""),
+            Map.entry(Querynames.GETGROUPS, "SELECT id, name, members FROM conversations WHERE conversations.type = 'group'"),
+            Map.entry(Querynames.GETCHATROOMMESSAGES, """
                     SELECT conversations.serviceId, conversations.profileFullName, messages.body, messages.sent_at
                     FROM messages
                     LEFT JOIN conversations
                     ON messages.sourceServiceId = conversations.serviceId
                     WHERE messages.conversationId = '%s'
                     AND messages.body GLOB 'Wordle [0-9.,]* [1-6X]/6*'
-                    ORDER BY messages.sent_at DESC"""
+                    ORDER BY messages.sent_at DESC""")
     );
 
     public static String getQuery(Querynames queryname) {
@@ -41,10 +48,14 @@ public class QueryManager {
     }
 
     public static String getGroupsMessagesQuery(String groupid) {
-        return queries.get(Querynames.GETGROUPSMESSAGES).formatted(groupid);
+        return queries.get(Querynames.GETCHATROOMMESSAGES).formatted(groupid);
     }
 
     public static String getUsersName(String userId) {
         return queries.get(Querynames.GETUSERSNAME).formatted(userId);
+    }
+
+    public static String getChatroomMessagesQuery(String chatroomId) {
+        return queries.get(Querynames.GETCHATROOMMESSAGES).formatted(chatroomId);
     }
 }

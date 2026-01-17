@@ -1,8 +1,9 @@
 package com.example.Signal.services;
 
-import com.example.Signal.models.GroupchatData;
-import com.example.Signal.models.GroupchatDataSignal;
-import com.example.Signal.models.GroupchatMessage;
+import com.example.Signal.models.ChatroomData;
+import com.example.Signal.models.ChatroomDataSignal;
+import com.example.Signal.models.ChatroomMessage;
+import com.example.Signal.models.ChatroomType;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.repositories.SQLiteRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,31 +53,42 @@ public class SignalDataService {
         return outputFilename;
     }
 
-    public List<GroupchatDataSignal> analyseFile(String decryptedFilename) {
-        return sqLiteRepository.getGroups(decryptedFilename);
+    public List<ChatroomDataSignal> analyseFile(String decryptedFilename) {
+        return sqLiteRepository.getChatrooms(decryptedFilename, ChatroomType.GROUP);
     }
 
-    public GroupchatData groupSelected(String filename, GroupchatDataSignal groupdata) {
-        List<GroupchatMessage> msgs = sqLiteRepository.getGroupsMessages(filename, groupdata.id());
-        return dataRepository.addGroupWithMessages(groupdata, msgs);
+    public List<ChatroomDataSignal> analyseDMs(String decryptedFilename) {
+        return sqLiteRepository.getChatrooms(decryptedFilename, ChatroomType.PRIVATE);
     }
 
-    public List<GroupchatData> loadGroups(List<GroupchatDataSignal> groups, String filename) {
-        // how to know which chats have text in them
-        // save number of wordle messages per chatroom to display in multiselect?
-        List<GroupchatData> loadedGroups = new ArrayList<>();
-        for (GroupchatDataSignal group : groups) {
-            loadedGroups.add(this.groupSelected(filename, group));
+    public ChatroomData loadChatroom(String filename, ChatroomDataSignal chatroomData) {
+        List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroomData.id());
+        return dataRepository.addChatroomWithMessages(chatroomData, msgs);
+    }
+
+    public List<ChatroomData> loadChatrooms(List<ChatroomDataSignal> chatrooms, String filename) {
+        List<ChatroomData> loadedChatrooms = new ArrayList<>();
+        for (ChatroomDataSignal chatroom : chatrooms) {
+            loadedChatrooms.add(this.loadChatroom(filename, chatroom));
         }
-        return loadedGroups;
+        return loadedChatrooms;
     }
 
-    public List<GroupchatData> loadAllGroups(String filename) {
+    public List<ChatroomData> loadAllChatrooms(String filename) {
+        // set owner of DB - as his name is just null elsewhere in DB
         String ownerId = sqLiteRepository.getOwnerId(filename);
         dataRepository.setOwnerId(ownerId);
         String ownerName = sqLiteRepository.getUsersName(filename, ownerId);
         dataRepository.setOwnerName(ownerName);
-        List<GroupchatDataSignal> allGroupsFromFile = sqLiteRepository.getGroups(filename); // TODO: do all chats instead
-        return this.loadGroups(allGroupsFromFile, filename);
+        
+        // Load both group chats and DMs
+        List<ChatroomDataSignal> allGroupsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.GROUP);
+        List<ChatroomDataSignal> allDMsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.PRIVATE);
+        
+        List<ChatroomData> allConversations = new ArrayList<>();
+        allConversations.addAll(this.loadChatrooms(allGroupsFromFile, filename));
+        allConversations.addAll(this.loadChatrooms(allDMsFromFile, filename));
+        
+        return allConversations;
     }
 }

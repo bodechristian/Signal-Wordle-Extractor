@@ -8,7 +8,7 @@ public enum Querynames {
     GETUSERSNAME("getOwnerName"),
     GETDMS("getDms"),
     GETGROUPS("getGroups"),
-    GETGROUPSMESSAGES("getGroupsMessages");
+    GETCHATROOMMESSAGES("getChatroomMessages");
 
     private final String value;
 

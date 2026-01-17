@@ -3,9 +3,10 @@ package com.example.Signal.models;
 import java.time.LocalDate;
 import java.util.List;
 
-public record GroupchatData(
+public record ChatroomData(
         String id,
         String name,
-        List<GroupchatMember> members,
+        ChatroomType type,
+        List<ChatroomMember> members,
         List<LocalDate> days_played
 ) {}

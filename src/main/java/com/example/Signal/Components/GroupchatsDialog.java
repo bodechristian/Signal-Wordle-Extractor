@@ -1,6 +1,6 @@
 package com.example.Signal.Components;
 
-import com.example.Signal.models.GroupchatDataSignal;
+import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.services.CallbackService;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -14,7 +14,7 @@ public class GroupchatsDialog extends Dialog {
     private VerticalLayout popupVL;
 
     public GroupchatsDialog() {
-        this.setHeaderTitle("Your groups");
+        this.setHeaderTitle("Your conversations (Groups & DMs)");
         this.getHeader().getElement().getStyle()
                 .set("display", "flex")
                 .set("flex-direction", "column")
@@ -39,11 +39,12 @@ public class GroupchatsDialog extends Dialog {
         this.createComponents();
     }
 
-    public void openWithGroupchats(List<GroupchatDataSignal> groupchats, CallbackService callbackService) {
+    public void openWithGroupchats(List<ChatroomDataSignal> chatrooms, CallbackService callbackService) {
         this.resetComponents();
-        for (GroupchatDataSignal groupchatDataSignal : groupchats) {
-            popupVL.add(new SelectionRow(groupchatDataSignal, callbackService)); // todo: besser aufbereiten, mit mehr daten
+        for (ChatroomDataSignal chatroomDataSignal : chatrooms) {
+            popupVL.add(new SelectionRow(chatroomDataSignal, callbackService));
         }
         this.open();
     }
 }
+

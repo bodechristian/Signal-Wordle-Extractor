@@ -1,7 +1,7 @@
 package com.example.Signal.views;
 
 import com.example.Signal.Components.GroupchatsDialog;
-import com.example.Signal.models.GroupchatDataSignal;
+import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.services.CallbackService;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.UI;
@@ -17,6 +17,7 @@ import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -64,15 +65,21 @@ public class SignalView extends VerticalLayout {
 
     private void startBtnClicked() {
         String decryptedFilename = signalDataService.decryptDB(filename, decryptionKeyField.getValue());
-        List<GroupchatDataSignal> groupchats = signalDataService.analyseFile(decryptedFilename);
+        List<ChatroomDataSignal> groupchats = signalDataService.analyseFile(decryptedFilename);
+        List<ChatroomDataSignal> dms = signalDataService.analyseDMs(decryptedFilename);
 
-        groupchatsDialog.openWithGroupchats(groupchats, new CallbackService() {
+        // Combine both group chats and DMs
+        List<ChatroomDataSignal> allConversations = new ArrayList<>();
+        allConversations.addAll(groupchats);
+        allConversations.addAll(dms);
+
+        groupchatsDialog.openWithGroupchats(allConversations, new CallbackService() {
             @Override
-            public void callbackWithGroup(GroupchatDataSignal groupdata) {
+            public void callbackWithGroup(ChatroomDataSignal chatroomData) {
                 groupchatsDialog.close();
                 UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
                         "filename", new String[]{decryptedFilename},
-                        "groupid", new String[]{groupdata.id()}
+                        "groupid", new String[]{chatroomData.id()}
                 )));
             }
         });

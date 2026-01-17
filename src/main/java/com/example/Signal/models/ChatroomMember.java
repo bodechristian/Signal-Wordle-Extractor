@@ -3,19 +3,17 @@ package com.example.Signal.models;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.cglib.core.Local;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 
 @Getter
 @Setter
 @Builder
-public class GroupchatMember {
+public class ChatroomMember {
     private final String member_id;
     private String name;
-    private Map<LocalDate, GroupchatMessage> messages;
+    private Map<LocalDate, ChatroomMessage> messages;
     private LocalDate first_played;
     private LocalDate last_played;
     private double avg_score;
@@ -24,7 +22,7 @@ public class GroupchatMember {
     private double last_thirty_days_avg;
 
     public String toString() {
-        return "[GroupchatMember: %s, id: %s]".formatted(this.name, this.member_id);
+        return "[ChatroomMember: %s, id: %s]".formatted(this.name, this.member_id);
     }
 
 }

@@ -1,7 +1,8 @@
 package com.example.Signal.repositories;
 
-import com.example.Signal.models.GroupchatDataSignal;
-import com.example.Signal.models.GroupchatMessage;
+import com.example.Signal.models.ChatroomDataSignal;
+import com.example.Signal.models.ChatroomMessage;
+import com.example.Signal.models.ChatroomType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,35 +70,37 @@ public class SQLiteRepository {
         }
     }
 
-    public List<GroupchatDataSignal> getGroups(String filename) {
-        log.info("Trying to read {}", filename);
+    public List<ChatroomDataSignal> getChatrooms(String filename, ChatroomType type) {
+        log.info("Trying to read {} chatrooms from {}", type, filename);
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
                 Statement statement = connection.createStatement()
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getQuery(Querynames.GETGROUPS));
+            Querynames queryName = type == ChatroomType.GROUP ? Querynames.GETGROUPS : Querynames.GETDMS;
+            ResultSet rs = statement.executeQuery(QueryManager.getQuery(queryName));
 
             // Parse query result
-            List<GroupchatDataSignal> groupchatDataSignalList = new ArrayList<>();
-            while (rs.next()) { // TODO: überspringe ich nicht die 1. Nachricht??
-                groupchatDataSignalList.add(new GroupchatDataSignal(
+            List<ChatroomDataSignal> chatroomList = new ArrayList<>();
+            while (rs.next()) {
+                chatroomList.add(new ChatroomDataSignal(
                         rs.getString("id"),
                         rs.getString("name"),
+                        type,
                         rs.getString("members")
                 ));
             }
 
             rs.close();
-            return groupchatDataSignalList;
+            return chatroomList;
         } catch (SQLException e) {
             log.error(e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    public List<GroupchatMessage> getGroupsMessages(String filename, String groupId) {
+    public List<ChatroomMessage> getChatroomMessages(String filename, String chatroomId) {
         log.info("Filename: {}", filename);
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + PATHTODBS + filename);
@@ -105,12 +108,12 @@ public class SQLiteRepository {
         ) {
             // Execute Query
             statement.setQueryTimeout(30);
-            ResultSet rs = statement.executeQuery(QueryManager.getGroupsMessagesQuery(groupId));
+            ResultSet rs = statement.executeQuery(QueryManager.getChatroomMessagesQuery(chatroomId));
 
             // Parse query result
-            List<GroupchatMessage> groupchatMessages = new ArrayList<>();
+            List<ChatroomMessage> messages = new ArrayList<>();
             while (rs.next()) {
-                groupchatMessages.add(new GroupchatMessage(
+                messages.add(new ChatroomMessage(
                         rs.getString("serviceId"),
                         rs.getString("profileFullName"),
                         rs.getString("body"),
@@ -119,7 +122,7 @@ public class SQLiteRepository {
             }
 
             rs.close();
-            return groupchatMessages;
+            return messages;
         } catch (SQLException e) {
             log.error(e.getMessage());
             return Collections.emptyList();
