@@ -1,6 +1,6 @@
 package com.example.Signal.views;
 
-import com.example.Signal.Components.GroupchatsDialog;
+import com.example.Signal.components.GroupchatsDialog;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;

@@ -1,4 +1,4 @@
-package com.example.Signal.Components;
+package com.example.Signal.components;
 
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;

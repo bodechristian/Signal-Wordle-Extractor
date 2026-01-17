@@ -26,6 +26,7 @@ public class SignalDataService {
 
     private final SQLiteRepository sqLiteRepository;
     private final DataRepository dataRepository;
+    private final DataStructureService dataStructureService;
 
     public String decryptDB(String filename, String decryptionKey)  {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
@@ -54,7 +55,7 @@ public class SignalDataService {
     public void loadChatrooms(List<ChatroomDataSignal> chatrooms, String filename) {
         for (ChatroomDataSignal chatroom : chatrooms) {
             List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroom.id());
-            dataRepository.addChatroomWithMessages(chatroom, msgs);
+            dataStructureService.addChatroomWithMessages(chatroom, msgs);
         }
     }
 

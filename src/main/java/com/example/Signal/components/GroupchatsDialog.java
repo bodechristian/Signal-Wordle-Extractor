@@ -1,12 +1,8 @@
-package com.example.Signal.Components;
+package com.example.Signal.components;
 
-import com.example.Signal.models.ChatroomDataSignal;
-import com.example.Signal.services.CallbackService;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 public class GroupchatsDialog extends Dialog {
@@ -38,13 +34,4 @@ public class GroupchatsDialog extends Dialog {
         this.removeAll();
         this.createComponents();
     }
-
-    public void openWithGroupchats(List<ChatroomDataSignal> chatrooms, CallbackService callbackService) {
-        this.resetComponents();
-        for (ChatroomDataSignal chatroomDataSignal : chatrooms) {
-            popupVL.add(new SelectionRow(chatroomDataSignal, callbackService));
-        }
-        this.open();
-    }
 }
-

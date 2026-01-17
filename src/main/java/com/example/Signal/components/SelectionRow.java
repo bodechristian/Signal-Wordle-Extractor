@@ -1,4 +1,4 @@
-package com.example.Signal.Components;
+package com.example.Signal.components;
 
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.services.CallbackService;
@@ -21,4 +21,3 @@ public class SelectionRow extends HorizontalLayout {
         );
     }
 }
-

@@ -1,4 +1,4 @@
-package com.example.Signal.Components;
+package com.example.Signal.components;
 
 import com.example.Signal.models.MessageTuple;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
