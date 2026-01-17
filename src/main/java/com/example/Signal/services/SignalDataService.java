@@ -1,6 +1,5 @@
 package com.example.Signal.services;
 
-import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMessage;
 import com.example.Signal.models.ChatroomType;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -53,34 +51,29 @@ public class SignalDataService {
         return outputFilename;
     }
 
-    public ChatroomData loadChatroom(String filename, ChatroomDataSignal chatroomData) {
-        List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroomData.id());
-        return dataRepository.addChatroomWithMessages(chatroomData, msgs);
-    }
-
-    public List<ChatroomData> loadChatrooms(List<ChatroomDataSignal> chatrooms, String filename) {
-        List<ChatroomData> loadedChatrooms = new ArrayList<>();
+    public void loadChatrooms(List<ChatroomDataSignal> chatrooms, String filename) {
         for (ChatroomDataSignal chatroom : chatrooms) {
-            loadedChatrooms.add(this.loadChatroom(filename, chatroom));
+            List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroom.id());
+            dataRepository.addChatroomWithMessages(chatroom, msgs);
         }
-        return loadedChatrooms;
     }
 
-    public List<ChatroomData> loadAllChatrooms(String filename) {
+    public void detectAndSetOwner(String filename) {
         // set owner of DB - as his name is just null elsewhere in DB
         String ownerId = sqLiteRepository.getOwnerId(filename);
         dataRepository.setOwnerId(ownerId);
         String ownerName = sqLiteRepository.getUsersName(filename, ownerId);
         dataRepository.setOwnerName(ownerName);
-        
+    }
+
+    public void loadAllChatrooms(String filename) {
+        detectAndSetOwner(filename);
+
         // Load both group chats and DMs
         List<ChatroomDataSignal> allGroupsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.GROUP);
         List<ChatroomDataSignal> allDMsFromFile = sqLiteRepository.getChatrooms(filename, ChatroomType.PRIVATE);
-        
-        List<ChatroomData> allConversations = new ArrayList<>();
-        allConversations.addAll(this.loadChatrooms(allGroupsFromFile, filename));
-        allConversations.addAll(this.loadChatrooms(allDMsFromFile, filename));
-        
-        return allConversations;
+
+        this.loadChatrooms(allGroupsFromFile, filename);
+        this.loadChatrooms(allDMsFromFile, filename);
     }
 }

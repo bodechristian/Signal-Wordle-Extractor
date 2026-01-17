@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ChatroomType {
     PRIVATE("private"),
-    GROUP("group");
+    GROUP("group"),
+    SUPERGROUP("super-group");
 
     private final String value;
 

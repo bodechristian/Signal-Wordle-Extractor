@@ -4,6 +4,7 @@ import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMember;
 import com.example.Signal.models.ChatroomMessage;
+import com.example.Signal.models.ChatroomType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +35,16 @@ public class DataRepository {
         allChatrooms.put(chatroomData.id(), chatroomData);
     }
 
-    public ChatroomData addChatroomWithMessages(ChatroomDataSignal chatroomData, List<ChatroomMessage> messages) {
+    public void addChatroomWithMessages(ChatroomDataSignal chatroomData, List<ChatroomMessage> messages) {
         List<ChatroomMember> members = this.loadMembers(messages);
         List<LocalDate> days_played = this.getDaysPlayed(members);
-        ChatroomData newChatroomData = new ChatroomData(chatroomData.id(), chatroomData.name(), chatroomData.type(), members, days_played);
+        ChatroomData newChatroomData = new ChatroomData(chatroomData.id(),
+                                                        chatroomData.name(),
+                                                        chatroomData.type(),
+                                                        members,
+                                                        days_played);
         log.info("added %s".formatted(String.valueOf(newChatroomData)));
         this.addChatroom(newChatroomData);
-        return newChatroomData;
     }
 
     private List<ChatroomMember> loadMembers(List<ChatroomMessage> messages) {
@@ -145,24 +149,16 @@ public class DataRepository {
             return null;
         }
 
-        // Collect all unique members across all active chatrooms
-        // Key: member_id, Value: ChatroomMember with deduplicated messages
-        Map<String, Map<LocalDate, ChatroomMessage>> consolidatedMembersMessages = new HashMap<>();
         Map<String, String> memberNames = new HashMap<>();
+        Map<String, Map<LocalDate, ChatroomMessage>> membersMessages = new HashMap<>();
 
         for (ChatroomData chatroom : activeChatrooms.values()) {
             for (ChatroomMember member : chatroom.members()) {
-                String memberId = member.getMember_id();
+                memberNames.putIfAbsent(member.getMember_id(), member.getName());
 
-                // Store member name (will be same across all chatrooms)
-                memberNames.putIfAbsent(memberId, member.getName());
+                Map<LocalDate, ChatroomMessage> memberMessages = membersMessages.computeIfAbsent(member.getMember_id(),
+                                                                                                 k -> new HashMap<>());
 
-                // Get or create the message map for this member
-                Map<LocalDate, ChatroomMessage> memberMessages =
-                    consolidatedMembersMessages.computeIfAbsent(memberId, k -> new HashMap<>());
-
-                // Add messages from this chatroom, deduplicating by date
-                // If a message for this date already exists, keep the existing one
                 for (Map.Entry<LocalDate, ChatroomMessage> entry : member.getMessages().entrySet()) {
                     memberMessages.putIfAbsent(entry.getKey(), entry.getValue());
                 }
@@ -171,13 +167,13 @@ public class DataRepository {
 
         // Build the consolidated member list
         List<ChatroomMember> consolidatedMembers = new ArrayList<>();
-        for (Map.Entry<String, Map<LocalDate, ChatroomMessage>> entry : consolidatedMembersMessages.entrySet()) {
+        for (Map.Entry<String, Map<LocalDate, ChatroomMessage>> entry : membersMessages.entrySet()) {
             String memberId = entry.getKey();
             consolidatedMembers.add(ChatroomMember.builder()
-                    .member_id(memberId)
-                    .name(memberNames.get(memberId))
-                    .messages(entry.getValue())
-                    .build());
+                                            .member_id(memberId)
+                                            .name(memberNames.get(memberId))
+                                            .messages(entry.getValue())
+                                            .build());
         }
 
         // Get all unique days played across all members
@@ -185,15 +181,13 @@ public class DataRepository {
 
         // Create chatroom names from active chatrooms
         String consolidatedName = activeChatrooms.size() == 1
-            ? activeChatrooms.values().iterator().next().name()
-            : "Combined (" + activeChatrooms.size() + " chats)";
+                ? activeChatrooms.values().iterator().next().name()
+                : "Combined (" + activeChatrooms.size() + " chats)";
 
-        return new ChatroomData(
-            "super-chatroom",
-            consolidatedName,
-            null, // No specific type for super-chatroom
-            consolidatedMembers,
-            daysPlayed
-        );
+        return new ChatroomData("super-chatroom",
+                                consolidatedName,
+                                ChatroomType.SUPERGROUP,
+                                consolidatedMembers,
+                                daysPlayed);
     }
 }
