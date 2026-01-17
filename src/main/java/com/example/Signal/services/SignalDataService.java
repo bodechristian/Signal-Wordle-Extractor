@@ -53,14 +53,6 @@ public class SignalDataService {
         return outputFilename;
     }
 
-    public List<ChatroomDataSignal> analyseFile(String decryptedFilename) {
-        return sqLiteRepository.getChatrooms(decryptedFilename, ChatroomType.GROUP);
-    }
-
-    public List<ChatroomDataSignal> analyseDMs(String decryptedFilename) {
-        return sqLiteRepository.getChatrooms(decryptedFilename, ChatroomType.PRIVATE);
-    }
-
     public ChatroomData loadChatroom(String filename, ChatroomDataSignal chatroomData) {
         List<ChatroomMessage> msgs = sqLiteRepository.getChatroomMessages(filename, chatroomData.id());
         return dataRepository.addChatroomWithMessages(chatroomData, msgs);

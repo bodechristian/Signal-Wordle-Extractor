@@ -2,10 +2,10 @@ package com.example.Signal.views;
 
 import com.example.Signal.Components.MessagesAccordionRow;
 import com.example.Signal.Components.ScoreHistogram;
-import com.example.Signal.models.EvaluationTimeframe;
 import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomMember;
 import com.example.Signal.models.ChatroomMessage;
+import com.example.Signal.models.EvaluationTimeframe;
 import com.example.Signal.models.MessageTuple;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.SignalDataService;
@@ -58,7 +58,6 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     HorizontalLayout hlCustomDateRange;
 
     private String filename;
-    private String groupid;
     private int chunkidx = 0;
 
     public SignalChatView(SignalDataService signalDataService, DataRepository dataRepository) {
@@ -210,6 +209,14 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         this.addAccordionMessages();
     }
 
+    private void setupPage() {
+        List<ChatroomData> allChatrooms = dataRepository.getAllChatrooms();
+
+        multiselectChats.setItems(allChatrooms);
+
+        updateEvaluation();
+    }
+
     private void updatePage() {
         this.updateMultiselectGroups();
         this.updateEvaluation();
@@ -298,15 +305,13 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void saveQueryParameters(BeforeEvent beforeEvent) {
-
         Location location = beforeEvent.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
 
         Map<String, List<String>> parametersMap = queryParameters.getParameters();
         filename = parametersMap.get("filename").getFirst();
-        groupid = parametersMap.get("groupid").getFirst();
 
-        log.info("Received {} and {}", filename, groupid);
+        log.info("SignalChatView received {}", filename);
     }
 
     @Override
@@ -316,8 +321,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         saveQueryParameters(beforeEvent);
 
         signalDataService.loadAllChatrooms(filename);
-        dataRepository.setChatroomActive(groupid);
 
-        this.updatePage();
+        this.setupPage();
     }
 }
