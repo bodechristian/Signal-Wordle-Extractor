@@ -28,7 +28,7 @@ public class SignalDataService {
     private final DataRepository dataRepository;
     private final DataStructureService dataStructureService;
 
-    public String decryptDB(String filename, String decryptionKey)  {
+    public String decryptDB(String filename, String decryptionKey) throws IOException, InterruptedException {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
         String outputFilename = "%s%s.db".formatted(filename, timestamp);
 
@@ -40,14 +40,16 @@ public class SignalDataService {
             Files.writeString(Path.of("unencryptDB.sql"), template);
         } catch (IOException e) {
             log.error(e.getMessage());
+            throw new IOException(e.getMessage());
         }
-
-        // TODO: make these commands atomic somehow.
-        // because 2nd simultaneous process could change unencryptdb.sql before last command
 
         // 2nd execute sql file IN SQLCIPHER to create plaintext.db
         String command = String.format("sqlcipher %s < unencryptDB.sql", PATHTODBS+filename);
-        commandRunner(command);
+        try {
+            commandRunner(command);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         return outputFilename;
     }

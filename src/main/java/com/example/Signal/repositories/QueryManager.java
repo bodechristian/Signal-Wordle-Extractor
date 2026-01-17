@@ -47,10 +47,6 @@ public class QueryManager {
         return queries.get(queryname);
     }
 
-    public static String getGroupsMessagesQuery(String groupid) {
-        return queries.get(Querynames.GETCHATROOMMESSAGES).formatted(groupid);
-    }
-
     public static String getUsersName(String userId) {
         return queries.get(Querynames.GETUSERSNAME).formatted(userId);
     }

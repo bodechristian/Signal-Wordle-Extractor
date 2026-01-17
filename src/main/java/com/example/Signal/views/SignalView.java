@@ -14,6 +14,7 @@ import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static com.example.Signal.Utils.inMB;
@@ -56,11 +57,15 @@ public class SignalView extends VerticalLayout {
     }
 
     private void startBtnClicked() {
-        String decryptedFilename = signalDataService.decryptDB(filename, decryptionKeyField.getValue());
+        try {
+            String decryptedFilename = signalDataService.decryptDB(filename, decryptionKeyField.getValue());
 
-        UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
-                "filename", new String[]{decryptedFilename}
-        )));
+            UI.getCurrent().navigate(SignalChatView.class, "", QueryParameters.full(Map.of(
+                    "filename", new String[]{decryptedFilename}
+            )));
+        } catch (IOException | InterruptedException e) {
+            log.error("Could not decrypt file", e);
+        }
     }
 
     private TextField createEncryptionkeyTextField() {

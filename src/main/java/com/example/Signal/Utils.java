@@ -13,7 +13,7 @@ import java.time.ZoneId;
 public class Utils {
     public final static String PATHTODBS = "DBs/";
 
-    public static void commandRunner(String command) {
+    public static void commandRunner(String command) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
         try {
             Process process = pb.start();
@@ -21,6 +21,7 @@ public class Utils {
             log.info("ExitCode: " + exitCode);
         } catch (IOException | InterruptedException e) {
             log.error(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
