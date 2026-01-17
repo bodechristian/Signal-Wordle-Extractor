@@ -323,26 +323,17 @@ vaadin-accordion-heading {
 .load-more-container {
   width: 100%;
   justify-content: center;
-  padding: 24px 0;
+  padding: 8px 0;
 }
 .load-more-container vaadin-button {
-  background-color: var(--color-primary);
-  color: white;
   border-radius: 8px;
   padding: 12px 32px;
-  font-weight: 600;
-  font-size: 1rem;
   box-shadow: var(--shadow-subtle);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 .load-more-container vaadin-button:hover {
-  background-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-card);
   transform: translateY(-2px);
-}
-.load-more-container vaadin-button:active {
-  transform: translateY(0);
 }
 
 /* Statistics Panel Container */

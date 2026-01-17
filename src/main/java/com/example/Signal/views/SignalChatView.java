@@ -141,9 +141,12 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         accordionAllMessages = new Accordion();
         
         // Create Load More button and container
-        Button btnLoadMore = new Button("Load More");
-        btnLoadMore.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-        btnLoadMore.addClickListener(e -> this.addAccordionMessages());
+        btnLoadMore = new Button("Load More");
+        btnLoadMore.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btnLoadMore.addClickListener(e -> {
+            this.addAccordionMessages();
+            this.updateLoadMoreButton();
+        });
         HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
         hlLoadMore.addClassName("load-more-container");
         
@@ -211,6 +214,28 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
         this.chunkidx = 0;
         this.addAccordionMessages();
+        this.updateLoadMoreButton();
+    }
+
+    private boolean hasMoreMessages() {
+        ChatroomData superChatroom = dataRepository.getActiveSuperChatroom();
+        if (superChatroom == null) {
+            return false;
+        }
+
+        int chunkStart = chunkidx * CHUNKSIZE;
+        return chunkStart < superChatroom.days_played().size();
+    }
+
+    private void updateLoadMoreButton() {
+        // Update button text and state based on whether more messages exist
+        if (hasMoreMessages()) {
+            btnLoadMore.setEnabled(true);
+            btnLoadMore.setText("Load More");
+        } else {
+            btnLoadMore.setEnabled(false);
+            btnLoadMore.setText("No More Messages");
+        }
     }
 
     private void setupPage() {
@@ -219,6 +244,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         multiselectChats.setItems(allChatrooms);
 
         updateEvaluation();
+        updateLoadMoreButton();
     }
 
     private void updatePage() {
