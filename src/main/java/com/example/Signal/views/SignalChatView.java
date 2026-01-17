@@ -56,6 +56,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     DatePicker datePickerFrom;
     DatePicker datePickerTo;
     HorizontalLayout hlCustomDateRange;
+    Button btnLoadMore;
 
     private String filename;
     private int chunkidx = 0;
@@ -177,28 +178,31 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private Map<String, List<MessageTuple>> getNextChunkAccordionMessages() {
-        // loads one chunk of messages
-        // currently does it for each group, which obviously is wrong and would load a lot when many groups
-        // this gets fixed when reworking groups into 1 supergroup in dataRepository
         Map<String, List<MessageTuple>> dailyGames = new HashMap<>();
-        for (ChatroomData chatroomData : dataRepository.getActiveChatrooms()) {
-            int chunkStart = chunkidx * CHUNKSIZE;
-            int chunkEnd = min(chatroomData.days_played().size(), (chunkidx + 1) * CHUNKSIZE);
-            if (chunkStart > chatroomData.days_played().size()) {
-                continue;
-            }
 
-            for (LocalDate day : chatroomData.days_played().subList(chunkStart, chunkEnd)) {
-                List<MessageTuple> dailyMsgs = new ArrayList<>();
-                for (ChatroomMember member : chatroomData.members()) {
-                    Map<LocalDate, ChatroomMessage> msgs = member.getMessages();
-                    if (msgs.containsKey(day)) {
-                        dailyMsgs.add(new MessageTuple(msgs.get(day).author(), msgs.get(day).message()));
-                    }
-                }
-                dailyGames.put(String.valueOf(day), dailyMsgs);
-            }
+        ChatroomData superChatroom = dataRepository.getActiveSuperChatroom();
+        if (superChatroom == null) {
+            return dailyGames; // No active chatrooms
         }
+
+        int chunkStart = chunkidx * CHUNKSIZE;
+        int chunkEnd = min(superChatroom.days_played().size(), (chunkidx + 1) * CHUNKSIZE);
+
+        if (chunkStart >= superChatroom.days_played().size()) {
+            return dailyGames; // No more messages
+        }
+
+        for (LocalDate day : superChatroom.days_played().subList(chunkStart, chunkEnd)) {
+            List<MessageTuple> dailyMsgs = new ArrayList<>();
+            for (ChatroomMember member : superChatroom.members()) {
+                Map<LocalDate, ChatroomMessage> msgs = member.getMessages();
+                if (msgs.containsKey(day)) {
+                    dailyMsgs.add(new MessageTuple(msgs.get(day).author(), msgs.get(day).message()));
+                }
+            }
+            dailyGames.put(String.valueOf(day), dailyMsgs);
+        }
+
         this.chunkidx += 1;
         return dailyGames;
     }
@@ -224,17 +228,25 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     /**
-     * Aggregates Wordle scores by person from active chatrooms within the specified timeframe
+     * Aggregates Wordle scores by person from the super-chatroom within the specified timeframe.
+     * Since we use a super-chatroom, each person's score is only counted once per day,
+     * even if they posted it in multiple chats.
+     *
      * @param timeframe The timeframe enum value to filter messages
      * @return Map of person name to their list of scores
      */
     private Map<String, List<Integer>> aggregateScoresByPerson(EvaluationTimeframe timeframe) {
         Map<String, List<Integer>> personScores = new HashMap<>();
-        
+
+        ChatroomData superChatroom = dataRepository.getActiveSuperChatroom();
+        if (superChatroom == null) {
+            return personScores; // No active chatrooms
+        }
+
         // Determine cutoff date
         LocalDate cutoffDate;
         LocalDate endDate = LocalDate.now();
-        
+
         if (timeframe.isCustomRange()) {
             cutoffDate = datePickerFrom.getValue();
             endDate = datePickerTo.getValue();
@@ -245,24 +257,23 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             cutoffDate = timeframe.getCutoffDate();
         }
 
-        for (ChatroomData chatroomData : dataRepository.getActiveChatrooms()) {
-            for (ChatroomMember member : chatroomData.members()) {
-                String personName = member.getName();
-                Map<LocalDate, ChatroomMessage> messages = member.getMessages();
+        // Iterate through the deduplicated super-chatroom
+        for (ChatroomMember member : superChatroom.members()) {
+            String personName = member.getName();
+            Map<LocalDate, ChatroomMessage> messages = member.getMessages();
 
-                for (Map.Entry<LocalDate, ChatroomMessage> entry : messages.entrySet()) {
-                    LocalDate messageDate = entry.getKey();
-                    ChatroomMessage message = entry.getValue();
+            for (Map.Entry<LocalDate, ChatroomMessage> entry : messages.entrySet()) {
+                LocalDate messageDate = entry.getKey();
+                ChatroomMessage message = entry.getValue();
 
-                    // Filter by timeframe
-                    if (messageDate.isBefore(cutoffDate) || messageDate.isAfter(endDate)) {
-                        continue;
-                    }
+                // Filter by timeframe
+                if (messageDate.isBefore(cutoffDate) || messageDate.isAfter(endDate)) {
+                    continue;
+                }
 
-                    int score = parseWordleScore(message.message());
-                    if (score != -1) { // Valid score
-                        personScores.computeIfAbsent(personName, k -> new ArrayList<>()).add(score);
-                    }
+                int score = parseWordleScore(message.message());
+                if (score != -1) { // Valid score
+                    personScores.computeIfAbsent(personName, k -> new ArrayList<>()).add(score);
                 }
             }
         }

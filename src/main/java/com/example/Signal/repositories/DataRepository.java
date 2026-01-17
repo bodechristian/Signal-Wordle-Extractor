@@ -132,4 +132,68 @@ public class DataRepository {
     public List<ChatroomData> getAllChatrooms() {
         return this.allChatrooms.values().stream().toList();
     }
+
+    /**
+     * Creates a consolidated super-chatroom from all active chatrooms.
+     * Deduplicates messages by member ID and date - if a person sent the same
+     * Wordle score on the same day to multiple chats, it's only counted once.
+     *
+     * @return A single ChatroomData containing all unique members and deduplicated messages
+     */
+    public ChatroomData getActiveSuperChatroom() {
+        if (activeChatrooms.isEmpty()) {
+            return null;
+        }
+
+        // Collect all unique members across all active chatrooms
+        // Key: member_id, Value: ChatroomMember with deduplicated messages
+        Map<String, Map<LocalDate, ChatroomMessage>> consolidatedMembersMessages = new HashMap<>();
+        Map<String, String> memberNames = new HashMap<>();
+
+        for (ChatroomData chatroom : activeChatrooms.values()) {
+            for (ChatroomMember member : chatroom.members()) {
+                String memberId = member.getMember_id();
+
+                // Store member name (will be same across all chatrooms)
+                memberNames.putIfAbsent(memberId, member.getName());
+
+                // Get or create the message map for this member
+                Map<LocalDate, ChatroomMessage> memberMessages =
+                    consolidatedMembersMessages.computeIfAbsent(memberId, k -> new HashMap<>());
+
+                // Add messages from this chatroom, deduplicating by date
+                // If a message for this date already exists, keep the existing one
+                for (Map.Entry<LocalDate, ChatroomMessage> entry : member.getMessages().entrySet()) {
+                    memberMessages.putIfAbsent(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        // Build the consolidated member list
+        List<ChatroomMember> consolidatedMembers = new ArrayList<>();
+        for (Map.Entry<String, Map<LocalDate, ChatroomMessage>> entry : consolidatedMembersMessages.entrySet()) {
+            String memberId = entry.getKey();
+            consolidatedMembers.add(ChatroomMember.builder()
+                    .member_id(memberId)
+                    .name(memberNames.get(memberId))
+                    .messages(entry.getValue())
+                    .build());
+        }
+
+        // Get all unique days played across all members
+        List<LocalDate> daysPlayed = getDaysPlayed(consolidatedMembers);
+
+        // Create chatroom names from active chatrooms
+        String consolidatedName = activeChatrooms.size() == 1
+            ? activeChatrooms.values().iterator().next().name()
+            : "Combined (" + activeChatrooms.size() + " chats)";
+
+        return new ChatroomData(
+            "super-chatroom",
+            consolidatedName,
+            null, // No specific type for super-chatroom
+            consolidatedMembers,
+            daysPlayed
+        );
+    }
 }
