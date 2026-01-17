@@ -32,7 +32,6 @@ public class Utils {
         }
     }
 
-
     public static LocalDate toLocalDate(String timestampString) {
         return LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(timestampString)), ZoneId.systemDefault());
     }
@@ -44,6 +43,7 @@ public class Utils {
     /**
      * Parses a Wordle score from a message.
      * Expected format: "Wordle XXX X/6" where X is the score (1-6, or X for failed)
+     *
      * @param message The message to parse
      * @return The score (1-6), or 7 for failed attempts (X/6), or -1 if not a valid Wordle message
      */
@@ -51,12 +51,12 @@ public class Utils {
         if (message == null || message.isEmpty()) {
             return -1;
         }
-        
+
         // Match pattern like "Wordle 1234 3/6" or "Wordle 1,234 X/6"
         String pattern = "Wordle\\s[0-9.,]+\\s+([1-6X])/6";
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
         java.util.regex.Matcher m = p.matcher(message);
-        
+
         if (m.find()) {
             String scoreStr = m.group(1);
             if (scoreStr.equals("X")) {
@@ -68,7 +68,42 @@ public class Utils {
                 return -1;
             }
         }
-        
+
         return -1;
+    }
+
+    /**
+     * checks if a given text-line is a typical wordle line with those boxes
+     *
+     * @param line the string to parse
+     * @return true if the line consists of 5 of those emoji boxes (black/white-yellow-green)
+     */
+    public static boolean isWordleLine(String line) {
+        String trimmed = line.trim();
+        int emojiCount = 0;
+        int i = 0;
+
+        while (i < trimmed.length()) {
+            char c = trimmed.charAt(i);
+
+            if (c == '\uD83D' && i + 1 < trimmed.length()) {
+                // Surrogate pair emoji (yellow, green)
+                char low = trimmed.charAt(i + 1);
+                if (low == '\uDFE8' || low == '\uDFE9') {
+                    emojiCount++;
+                    i += 2;
+                } else {
+                    return false;
+                }
+            } else if (c == '⬜' || c == '⬛') {
+                // Single char emoji (white, black squares)
+                emojiCount++;
+                i += 1;
+            } else {
+                return false;
+            }
+        }
+
+        return emojiCount == 5;
     }
 }

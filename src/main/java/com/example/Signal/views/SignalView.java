@@ -1,6 +1,5 @@
 package com.example.Signal.views;
 
-import com.example.Signal.components.GroupchatsDialog;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -27,7 +26,6 @@ public class SignalView extends VerticalLayout {
     TextField decryptionKeyField;
     String filename;
     SignalDataService signalDataService;
-    GroupchatsDialog groupchatsDialog;
 
     public SignalView(SignalDataService signalDataService) {
         this.signalDataService = signalDataService;
@@ -45,9 +43,7 @@ public class SignalView extends VerticalLayout {
 
         Upload upload = createDBUploadArea();
 
-        groupchatsDialog = new GroupchatsDialog();
-
-        add(h1, btnGo, decryptionKeyField, upload, groupchatsDialog);
+        add(h1, btnGo, decryptionKeyField, upload);
     }
 
     private Button createStartButton() {
