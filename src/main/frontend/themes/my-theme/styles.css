@@ -15,10 +15,6 @@
   --color-text-secondary: #666666;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 .groupdialog__row {
   position: relative;
   cursor: pointer;
@@ -86,7 +82,7 @@ vaadin-accordion-panel[opened]::part(summary) {
   border-radius: var(--border-radius-card) var(--border-radius-card) 0 0;
 }
 vaadin-accordion-panel::part(content) {
-  padding: 24px;
+  padding: 16px;
   background-color: var(--color-background);
 }
 vaadin-accordion-panel::part(toggle-button) {
@@ -99,7 +95,7 @@ vaadin-accordion-heading {
 
 .chat-container {
   gap: var(--spacing-section);
-  padding: 24px;
+  padding: 8px;
   background-color: var(--color-background-subtle);
   min-height: 100vh;
 }
@@ -294,6 +290,149 @@ vaadin-accordion-heading {
   margin-top: 8px;
 }
 
+.temporal-score-graph {
+  width: 600px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-card);
+  background-color: var(--color-background);
+  padding: 24px 20px 20px 20px;
+  gap: 0;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+.temporal-score-graph:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+.temporal-score-graph__title {
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-background-subtle);
+}
+.temporal-score-graph__stats {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background-color: var(--color-background-subtle);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-around;
+  border: 1px solid var(--color-border);
+  line-height: 1.4;
+}
+.temporal-score-graph__no-data {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+.temporal-score-graph__container {
+  padding: 0;
+  gap: 8px;
+}
+.temporal-score-graph__row {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  padding: 0;
+  margin: 0;
+}
+.temporal-score-graph__y-axis {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  border-right: 2px solid var(--color-border);
+}
+.temporal-score-graph__y-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 240px;
+  padding: 0;
+  margin: 0;
+}
+.temporal-score-graph__y-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: right;
+  min-width: 20px;
+}
+.temporal-score-graph__plot-area {
+  position: relative;
+  border-left: 2px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
+  margin-left: 8px;
+}
+.temporal-score-graph__point {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  z-index: 2;
+  border: 2px solid var(--color-background);
+  transform: translate(-50%, -50%);
+}
+.temporal-score-graph__point:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  z-index: 3;
+}
+.temporal-score-graph__point--score-1 {
+  background: #00d66a;
+}
+.temporal-score-graph__point--score-2 {
+  background: #4cd964;
+}
+.temporal-score-graph__point--score-3 {
+  background: #a8e063;
+}
+.temporal-score-graph__point--score-4 {
+  background: #ffc857;
+}
+.temporal-score-graph__point--score-5 {
+  background: #ff9a3c;
+}
+.temporal-score-graph__point--score-6 {
+  background: #ff6b6b;
+}
+.temporal-score-graph__point--score-7 {
+  background: #c92a2a;
+}
+.temporal-score-graph__x-axis-container {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 8px;
+  margin-left: 48px;
+}
+.temporal-score-graph__x-labels {
+  position: relative;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+}
+.temporal-score-graph__x-label-container {
+  position: absolute;
+  transform: translateX(-50%);
+}
+.temporal-score-graph__x-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
 .evaluation-container {
   overflow-x: auto;
   overflow-y: visible;
@@ -358,24 +497,9 @@ vaadin-accordion-heading {
   width: 100%;
   background-color: transparent;
 }
-.all-messages-wrapper vaadin-accordion-panel {
-  width: 100%;
-}
-.all-messages-wrapper vaadin-accordion-panel::part(content) {
-  width: 100%;
-  max-width: 100%;
-  padding: 16px 24px 24px 24px;
-}
 
 .daily-messages-accordion {
   width: 100%;
-}
-.daily-messages-accordion vaadin-accordion-panel {
-  width: 100%;
-}
-.daily-messages-accordion vaadin-accordion-panel::part(content) {
-  width: 100%;
-  max-width: 100%;
 }
 
 /* Timeframe Selector Styling */

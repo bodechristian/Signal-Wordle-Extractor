@@ -15,9 +15,7 @@
   --color-text-secondary: #666666;
 }
 
-* {
-  box-sizing: border-box;
-}
+
 
 .groupdialog__row {
   position: relative;
@@ -107,7 +105,7 @@ vaadin-accordion-panel {
   }
   
   &::part(content) {
-    padding: 24px;
+    padding: 16px;
     background-color: var(--color-background);
   }
   
@@ -122,7 +120,7 @@ vaadin-accordion-heading {
 
 .chat-container {
   gap: var(--spacing-section);
-  padding: 24px;
+  padding: 8px;
   background-color: var(--color-background-subtle);
   min-height: 100vh;
 }
@@ -353,6 +351,172 @@ vaadin-accordion-heading {
   }
 }
 
+.temporal-score-graph {
+  width: 600px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-card);
+  background-color: var(--color-background);
+  padding: 24px 20px 20px 20px;
+  gap: 0;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+  }
+
+  &__title {
+    margin: 0 0 12px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-background-subtle);
+  }
+
+  &__stats {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background-color: var(--color-background-subtle);
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-around;
+    border: 1px solid var(--color-border);
+    line-height: 1.4;
+  }
+
+  &__no-data {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: 20px;
+  }
+
+  &__container {
+    padding: 0;
+    gap: 8px;
+  }
+
+  &__row {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__y-axis {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+    border-right: 2px solid var(--color-border);
+  }
+
+  &__y-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 240px;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__y-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-align: right;
+    min-width: 20px;
+  }
+
+  &__plot-area {
+    position: relative;
+    border-left: 2px solid var(--color-border);
+    border-bottom: 2px solid var(--color-border);
+    margin-left: 8px;
+  }
+
+  &__point {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    z-index: 2;
+    border: 2px solid var(--color-background);
+    transform: translate(-50%, -50%);
+    
+    &:hover {
+      transform: translate(-50%, -50%) scale(1.5);
+      z-index: 3;
+    }
+
+    &--score-1 {
+      background: #00d66a;
+    }
+
+    &--score-2 {
+      background: #4cd964;
+    }
+
+    &--score-3 {
+      background: #a8e063;
+    }
+
+    &--score-4 {
+      background: #ffc857;
+    }
+
+    &--score-5 {
+      background: #ff9a3c;
+    }
+
+    &--score-6 {
+      background: #ff6b6b;
+    }
+
+    &--score-7 {
+      background: #c92a2a;
+    }
+  }
+
+  &__x-axis-container {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 8px;
+    margin-left: 48px;
+  }
+
+  &__x-labels {
+    position: relative;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__x-label-container {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  &__x-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
 .evaluation-container {
   overflow-x: auto;
   overflow-y: visible;
@@ -422,29 +586,10 @@ vaadin-accordion-heading {
 .all-messages-wrapper {
   width: 100%;
   background-color: transparent;
-  
-  vaadin-accordion-panel {
-    width: 100%;
-    
-    &::part(content) {
-      width: 100%;
-      max-width: 100%;
-      padding: 16px 24px 24px 24px;
-    }
-  }
 }
 
 .daily-messages-accordion {
   width: 100%;
-  
-  vaadin-accordion-panel {
-    width: 100%;
-    
-    &::part(content) {
-      width: 100%;
-      max-width: 100%;
-    }
-  }
 }
 
 /* Timeframe Selector Styling */

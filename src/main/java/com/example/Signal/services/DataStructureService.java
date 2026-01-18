@@ -3,7 +3,6 @@ package com.example.Signal.services;
 import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMember;
-import com.example.Signal.models.ChatroomMemberFactory;
 import com.example.Signal.models.ChatroomMessage;
 import com.example.Signal.repositories.DataRepository;
 import lombok.AllArgsConstructor;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 public class DataStructureService {
 
     private final DataRepository dataRepository;
-    private final ChatroomMemberFactory chatroomMemberFactory;
 
     public void changeActiveChatrooms(Collection<ChatroomData> chatrooms) {
         log.info("Changing active chatrooms");
@@ -40,9 +38,9 @@ public class DataStructureService {
     }
 
     public void addChatroomWithMessages(ChatroomDataSignal chatroomData, List<ChatroomMessage> messages) {
-        List<ChatroomMember> members = this.loadMembers(messages);
-        List<LocalDate> days_played = this.getDaysPlayed(members);
-        ChatroomData newChatroomData = new ChatroomData(chatroomData.id(), chatroomData.name(), members, days_played);
+        List<ChatroomMember> members = loadMembers(messages);
+        List<LocalDate> daysPlayed = getDaysPlayed(members);
+        ChatroomData newChatroomData = new ChatroomData(chatroomData.id(), chatroomData.name(), members, daysPlayed);
         log.info("added %s".formatted(String.valueOf(newChatroomData)));
         dataRepository.addChatroom(newChatroomData);
     }
@@ -50,7 +48,7 @@ public class DataStructureService {
     private List<LocalDate> getDaysPlayed(List<ChatroomMember> members) {
         Set<LocalDate> days_played = new HashSet<>();
         for (ChatroomMember member : members) {
-            days_played.addAll(member.getMessages().keySet());
+            days_played.addAll(member.messages().keySet());
         }
         List<LocalDate> d = new ArrayList<>(days_played);
         d.sort(Collections.reverseOrder());
@@ -63,14 +61,31 @@ public class DataStructureService {
         List<ChatroomMember> members = new ArrayList<>();
         for (String member_id : membersMessages.keySet()) {
             List<ChatroomMessage> msgs = membersMessages.get(member_id);
-            members.add(chatroomMemberFactory.createChatroomMember(member_id, msgs));
+            members.add(ChatroomMember.fromMessages(member_id, convertMessagesToDayMap(msgs)));
         }
 
         return members;
     }
 
+    /**
+     * Takes a list chatroom messages and converts it into a hashmap with the timestamp as the key
+     * Should only be called with a single person's messages
+     *
+     * @param msgs the list of messages from a person in a chatroom
+     * @return the timestamp of each message as the key and the message as the value
+     */
+    private Map<LocalDate, ChatroomMessage> convertMessagesToDayMap(List<ChatroomMessage> msgs) {
+        Map<LocalDate, ChatroomMessage> mymap = new HashMap<>();
+
+        for (ChatroomMessage msg : msgs) {
+            mymap.putIfAbsent(msg.timestamp(), msg);
+        }
+
+        return mymap;
+    }
+
     private Map<String, List<ChatroomMessage>> selectEachMembersMessages(List<ChatroomMessage> messages) {
-        Map<String, List<ChatroomMessage>> mymap = new HashMap<>();
+        Map<String, List<ChatroomMessage>> eachPersonsMessages = new HashMap<>();
 
         for (ChatroomMessage msg : messages) {
             if (msg.authorId() == null) { // fixes discrepency between phone and desktop of owner
@@ -79,14 +94,14 @@ public class DataStructureService {
                                           msg.message(),
                                           msg.timestamp());
             }
-            if (!mymap.containsKey(msg.authorId())) {
-                mymap.put(msg.authorId(), new ArrayList<>(List.of(msg)));
+            if (!eachPersonsMessages.containsKey(msg.authorId())) {
+                eachPersonsMessages.put(msg.authorId(), new ArrayList<>(List.of(msg)));
             } else {
-                mymap.get(msg.authorId()).add(msg);
+                eachPersonsMessages.get(msg.authorId()).add(msg);
             }
         }
 
-        return mymap;
+        return eachPersonsMessages;
     }
 
     /**
@@ -104,8 +119,8 @@ public class DataStructureService {
         List<ChatroomMember> members = dataRepository.getActiveChatrooms()
                 .stream()
                 .flatMap(e -> e.members().stream())
-                .collect(Collectors.toMap(ChatroomMember::getMember_id,
-                                          ChatroomMember::getMessages,
+                .collect(Collectors.toMap(ChatroomMember::member_id,
+                                          ChatroomMember::messages,
                                           (existing, replacement) -> {
                                               existing.putAll(replacement);
                                               return existing;
@@ -113,7 +128,7 @@ public class DataStructureService {
                                           HashMap::new))
                 .entrySet()
                 .stream()
-                .map(entry -> chatroomMemberFactory.createChatroomMember(entry.getKey(), entry.getValue()))
+                .map(entry -> ChatroomMember.fromMessages(entry.getKey(), entry.getValue()))
                 .toList();
 
         return new ChatroomData("super-chatroom", "super-chatroom", members, getDaysPlayed(members));

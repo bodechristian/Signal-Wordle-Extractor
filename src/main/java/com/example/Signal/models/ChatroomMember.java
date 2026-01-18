@@ -1,28 +1,42 @@
 package com.example.Signal.models;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 
-@Getter
-@Setter
-@Builder
-public class ChatroomMember {
-    private final String member_id;
-    private String name;
-    private Map<LocalDate, ChatroomMessage> messages;
-    private LocalDate first_played;
-    private LocalDate last_played;
-    private double avg_score;
-    private double last_ten_scores_avg;
-    private double last_seven_days_avg;
-    private double last_thirty_days_avg;
+public record ChatroomMember(String member_id,
+                             String name,
+                             Map<LocalDate, ChatroomMessage> messages,
+                             int nbGames,
+                             Optional<LocalDate> firstPlayed,
+                             Optional<LocalDate> lastPlayed) {
 
+    private static String extractName(Map<LocalDate, ChatroomMessage> messages) {
+        return messages.values().stream().toList().getFirst().author();
+    }
+
+    private static Optional<LocalDate> extractFirstDate(Map<LocalDate, ChatroomMessage> messages) {
+        return messages.keySet().stream().min(LocalDate::compareTo);
+    }
+
+    private static Optional<LocalDate> extractLastDate(Map<LocalDate, ChatroomMessage> messages) {
+        return messages.keySet().stream().max(LocalDate::compareTo);
+    }
+
+    public static ChatroomMember fromMessages(String member_id, Map<LocalDate, ChatroomMessage> messages) {
+        return new ChatroomMember(member_id,
+                                  extractName(messages),
+                                  messages,
+                                  messages.size(),
+                                  extractFirstDate(messages),
+                                  extractLastDate(messages));
+    }
+
+    @NotNull
+    @Override
     public String toString() {
         return "[ChatroomMember: %s, id: %s]".formatted(this.name, this.member_id);
     }
-
 }
