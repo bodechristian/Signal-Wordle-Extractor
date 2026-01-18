@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public enum EvaluationTimeframe {
     ALL_TIME("All time", Integer.MAX_VALUE),
     LAST_7_DAYS("Last 7 days", 7),
+    LAST_14_DAYS("Last 14 days", 14),
     LAST_30_DAYS("Last 30 days", 30),
     LAST_90_DAYS("Last 90 days", 90),
     LAST_365_DAYS("Last 365 days", 365),
