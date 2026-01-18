@@ -16,6 +16,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -50,7 +51,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     HorizontalLayout contentHeader;
     VerticalLayout contentContainer;
 
-    Accordion accordionSuper;
+    VerticalLayout statisticsPanel;
+    Accordion allMessagesAccordion;
     Accordion accordionAllMessages;
     MultiSelectComboBox<ChatroomData> multiselectChats;
     HorizontalLayout hlEvaluation;
@@ -89,16 +91,14 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         contentContainer = new VerticalLayout();
         contentContainer.addClassNames("chat-container");
 
-        accordionSuper = new Accordion();
-        accordionSuper.addClassName("chat-accordion-super");
-
-        // Create statistics panel with timeframe selector
-        VerticalLayout statisticsPanel = new VerticalLayout();
+        statisticsPanel = new VerticalLayout();
         statisticsPanel.setPadding(false);
         statisticsPanel.setSpacing(true);
         statisticsPanel.addClassName("statistics-panel");
 
-        // Timeframe selector
+        H2 statisticsHeadline = new H2("Statistics");
+        statisticsHeadline.addClassName("statistics-headline");
+
         selectTimeframe = new Select<>();
         selectTimeframe.setLabel("Timeframe");
         selectTimeframe.setItems(EvaluationTimeframe.values());
@@ -139,11 +139,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         hlEvaluation.addClassName("evaluation-container");
         hlEvaluation.setWidth("100%");
 
-        statisticsPanel.add(selectTimeframe, hlCustomDateRange, hlEvaluation);
+        statisticsPanel.add(statisticsHeadline, selectTimeframe, hlCustomDateRange, hlEvaluation);
 
         accordionAllMessages = new Accordion();
+        accordionAllMessages.addClassName("daily-messages-accordion");
 
-        // Create Load More button and container
         btnLoadMore = new Button("Load More");
         btnLoadMore.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnLoadMore.addClickListener(e -> {
@@ -153,16 +153,16 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
         hlLoadMore.addClassName("load-more-container");
 
-        // Create a container for messages + load more button
-        VerticalLayout allMessagesContent = new VerticalLayout();
-        allMessagesContent.setPadding(false);
-        allMessagesContent.setSpacing(false);
-        allMessagesContent.add(accordionAllMessages, hlLoadMore);
+        VerticalLayout messagesWithButton = new VerticalLayout();
+        messagesWithButton.setPadding(false);
+        messagesWithButton.setSpacing(false);
+        messagesWithButton.add(accordionAllMessages, hlLoadMore);
 
-        accordionSuper.add("Statistics", statisticsPanel);
-        accordionSuper.add("All Messages", allMessagesContent);
+        allMessagesAccordion = new Accordion();
+        allMessagesAccordion.addClassName("all-messages-wrapper");
+        allMessagesAccordion.add("All Messages", messagesWithButton);
 
-        contentContainer.add(accordionSuper);
+        contentContainer.add(statisticsPanel, allMessagesAccordion);
 
         this.add(contentHeader, contentContainer);
     }

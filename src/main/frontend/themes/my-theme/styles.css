@@ -323,7 +323,7 @@ vaadin-accordion-heading {
 .load-more-container {
   width: 100%;
   justify-content: center;
-  padding: 8px 0;
+  padding: 16px 0 8px 0;
 }
 .load-more-container vaadin-button {
   border-radius: 8px;
@@ -341,7 +341,41 @@ vaadin-accordion-heading {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-bottom: 8px;
+  padding: 24px;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+}
+
+.statistics-headline {
+  margin: 0 0 4px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-background-subtle);
+}
+
+.all-messages-wrapper {
+  width: 100%;
+  background-color: transparent;
+}
+.all-messages-wrapper vaadin-accordion-panel {
+  width: 100%;
+}
+.all-messages-wrapper vaadin-accordion-panel::part(content) {
+  width: 100%;
+  max-width: 100%;
+  padding: 16px 24px 24px 24px;
+}
+
+.daily-messages-accordion {
+  width: 100%;
+}
+.daily-messages-accordion vaadin-accordion-panel {
+  width: 100%;
+}
+.daily-messages-accordion vaadin-accordion-panel::part(content) {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Timeframe Selector Styling */
@@ -396,3 +430,5 @@ h3 {
   color: var(--color-text);
   margin-bottom: 12px;
 }
+
+/*# sourceMappingURL=styles.css.map */
