@@ -56,6 +56,11 @@ public class EChartsScatterChartBuilder {
                                      
                                          myChart.setOption(option);
                                      
+                                         // Resize after a short delay to ensure proper dimensions
+                                         setTimeout(function() {
+                                             myChart.resize();
+                                         }, 1);
+                                     
                                          window.addEventListener('resize', function() {
                                              myChart.resize();
                                          });
