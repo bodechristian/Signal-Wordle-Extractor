@@ -122,8 +122,9 @@ public class DataStructureService {
                 .collect(Collectors.toMap(ChatroomMember::member_id,
                                           ChatroomMember::messages,
                                           (existing, replacement) -> {
-                                              existing.putAll(replacement);
-                                              return existing;
+                                              Map<LocalDate, ChatroomMessage> merged = new HashMap<>(existing);
+                                              merged.putAll(replacement);
+                                              return merged;
                                           },
                                           HashMap::new))
                 .entrySet()
