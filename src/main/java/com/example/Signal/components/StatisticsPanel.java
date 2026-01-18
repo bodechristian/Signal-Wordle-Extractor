@@ -1,8 +1,10 @@
 package com.example.Signal.components;
 
 import com.example.Signal.models.EvaluationTimeframe;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -16,10 +18,12 @@ public class StatisticsPanel extends VerticalLayout {
 
     private final Select<EvaluationTimeframe> selectTimeframe;
     private final IntegerField rollingAverageWindowField;
+    private final Checkbox wrapChartsCheckbox;
     private final DatePicker datePickerFrom;
     private final DatePicker datePickerTo;
     private final HorizontalLayout hlCustomDateRange;
     private final HorizontalLayout hlHistograms;
+    private final Hr separator;
     private final HorizontalLayout hlTemporalCharts;
 
     public StatisticsPanel(Runnable updateEvaluation) {
@@ -54,9 +58,17 @@ public class StatisticsPanel extends VerticalLayout {
         });
         rollingAverageWindowField.setWidth("150px");
 
-        HorizontalLayout timeframeRow = new HorizontalLayout(selectTimeframe, rollingAverageWindowField);
-        timeframeRow.setSpacing(true);
-        timeframeRow.setAlignItems(Alignment.END);
+        wrapChartsCheckbox = new Checkbox("Wrap");
+        wrapChartsCheckbox.setValue(false);
+        wrapChartsCheckbox.addValueChangeListener(event -> {
+            if (event.isFromClient()) {
+                updateWrapMode(event.getValue());
+            } // ignore programmatic changes
+        });
+
+        HorizontalLayout rowOptions = new HorizontalLayout(selectTimeframe, rollingAverageWindowField, wrapChartsCheckbox);
+        rowOptions.setSpacing(true);
+        rowOptions.setAlignItems(Alignment.END);
 
         datePickerFrom = new DatePicker("From");
         datePickerFrom.setValue(LocalDate.now().minusDays(30));
@@ -84,15 +96,28 @@ public class StatisticsPanel extends VerticalLayout {
         hlHistograms.addClassName("histograms-container");
         hlHistograms.setWidthFull();
 
+        separator = new Hr();
+        separator.addClassName("evaluation-separator");
+
         hlTemporalCharts = new HorizontalLayout();
         hlTemporalCharts.addClassName("temporal-charts-container");
         hlTemporalCharts.setWidthFull();
 
-        add(headline, timeframeRow, hlCustomDateRange, hlHistograms, hlTemporalCharts);
+        add(headline, rowOptions, hlCustomDateRange, hlHistograms, separator, hlTemporalCharts);
     }
 
     public void clearChildren() {
         hlHistograms.removeAll();
         hlTemporalCharts.removeAll();
+    }
+
+    private void updateWrapMode(boolean wrap) {
+        if (wrap) {
+            hlHistograms.addClassName("wrap-enabled");
+            hlTemporalCharts.addClassName("wrap-enabled");
+        } else {
+            hlHistograms.removeClassName("wrap-enabled");
+            hlTemporalCharts.removeClassName("wrap-enabled");
+        }
     }
 }

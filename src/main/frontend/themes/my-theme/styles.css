@@ -459,6 +459,20 @@ vaadin-accordion-heading {
   background: #bdbdbd;
 }
 
+/* Wrap mode styling */
+.wrap-enabled {
+  flex-wrap: wrap !important;
+  overflow-x: visible !important;
+}
+
+/* Evaluation separator styling */
+.evaluation-separator {
+  margin: 1px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent 0%, var(--color-border) 10%, var(--color-border) 90%, transparent 100%);
+}
+
 .load-more-container {
   width: 100%;
   justify-content: center;
@@ -489,7 +503,6 @@ vaadin-accordion-heading {
 
 .statistics-headline {
   margin: 0 0 4px 0;
-  padding-bottom: 12px;
   border-bottom: 2px solid var(--color-background-subtle);
 }
 
