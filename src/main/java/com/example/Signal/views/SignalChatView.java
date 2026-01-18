@@ -9,9 +9,11 @@ import com.example.Signal.components.TemporalScoreGraph;
 import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomMember;
 import com.example.Signal.models.ChatroomMessage;
+import com.example.Signal.models.DateTimeframe;
 import com.example.Signal.models.EvaluationTimeframe;
 import com.example.Signal.models.MessageTuple;
 import com.example.Signal.repositories.DataRepository;
+import com.example.Signal.services.AggregationService;
 import com.example.Signal.services.DataStructureService;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -33,10 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
-import static com.example.Signal.Utils.parseWordleScore;
 import static java.lang.Integer.min;
 
 @Slf4j
@@ -48,6 +47,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     SignalDataService signalDataService;
     DataRepository dataRepository;
     DataStructureService dataStructureService;
+    AggregationService aggregationService;
 
     ChatroomSelector chatroomSelector;
     VerticalLayout contentContainer;
@@ -59,10 +59,12 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
     public SignalChatView(SignalDataService signalDataService,
                           DataRepository dataRepository,
-                          DataStructureService dataStructureService) {
+                          DataStructureService dataStructureService,
+                          AggregationService aggregationService) {
         this.signalDataService = signalDataService;
         this.dataRepository = dataRepository;
         this.dataStructureService = dataStructureService;
+        this.aggregationService = aggregationService;
 
         chatroomSelector = new ChatroomSelector(chatrooms -> {
             dataStructureService.changeActiveChatrooms(chatrooms);
@@ -177,45 +179,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         updateAccordionAllMessages();
     }
 
-    private <T> Map<String, T> aggregateByPerson(DateTimeframe timeframe,
-                                                 Supplier<T> containerSupplier,
-                                                 BiConsumer<T, ScoreEntry> aggregator) {
-        Map<String, T> result = new HashMap<>();
-
-        for (ChatroomMember member : dataRepository.getSuperChatroom().members()) {
-            for (Map.Entry<LocalDate, ChatroomMessage> entry : member.messages().entrySet()) {
-                LocalDate messageDate = entry.getKey();
-
-                if (messageDate.isBefore(timeframe.start) || messageDate.isAfter(timeframe.end)) {
-                    continue;
-                }
-
-                int score = parseWordleScore(entry.getValue().message());
-                if (score != -1) {
-                    T container = result.computeIfAbsent(member.name(), k -> containerSupplier.get());
-                    aggregator.accept(container, new ScoreEntry(messageDate, score));
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private Map<String, List<Integer>> aggregateScoresByPerson(DateTimeframe timeframe) {
-        return aggregateByPerson(timeframe, ArrayList::new, (list, entry) -> list.add(entry.score()));
-    }
-
-    private Map<String, Map<LocalDate, Integer>> aggregateTemporalScoresByPerson(DateTimeframe timeframe) {
-        return aggregateByPerson(timeframe, HashMap::new, (map, entry) -> map.put(entry.date(), entry.score()));
-    }
-
-    public DateTimeframe getDateTimeframe() {
+    public DateTimeframe getDateTimeframe(EvaluationTimeframe selectedTimeframe) {
         final LocalDate cutoffDate;
         final LocalDate endDate;
-        EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
 
         if (selectedTimeframe != null && selectedTimeframe.isCustomRange()) {
-            statisticsPanel.getHlCustomDateRange().setVisible(true);
             cutoffDate = statisticsPanel.getDatePickerFrom().getValue();
             endDate = statisticsPanel.getDatePickerTo().getValue();
             if (cutoffDate == null || endDate == null) {
@@ -234,21 +202,25 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     private void updateEvaluation() {
         HorizontalLayout hlEvaluation = statisticsPanel.getHlEvaluation();
         ChatroomData superChatroom = dataRepository.getSuperChatroom();
+        EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
         hlEvaluation.removeAll();
+
+        statisticsPanel.getHlCustomDateRange()
+                .setVisible(selectedTimeframe != null && selectedTimeframe.isCustomRange());
 
         if (superChatroom == null) {
             hlEvaluation.add(new H3("Select conversations to see statistics"));
             return;
         }
 
-        DateTimeframe datetimeframe = getDateTimeframe();
+        DateTimeframe datetimeframe = getDateTimeframe(selectedTimeframe);
         if (datetimeframe == null) {
             hlEvaluation.add(new H3("Please select both start and end dates"));
             return;
         }
 
-        Map<String, List<Integer>> personScores = aggregateScoresByPerson(datetimeframe);
-        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregateTemporalScoresByPerson(datetimeframe);
+        Map<String, List<Integer>> personScores = aggregationService.aggregateScoresByPerson(datetimeframe);
+        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregationService.aggregateTemporalScoresByPerson(datetimeframe);
         if (personScores.isEmpty()) {
             hlEvaluation.add(new H3("No Wordle scores found in selected conversations"));
             return;
@@ -256,11 +228,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
 
         // Graph x-axis should not show 30/All-time days if only the last 5 days have been played - then show 5
         LocalDate graphStartDate = superChatroom.firstDayPlayed()
-                .filter(date -> !date.isBefore(datetimeframe.start))
-                .orElse(datetimeframe.start);
+                .filter(date -> !date.isBefore(datetimeframe.start()))
+                .orElse(datetimeframe.start());
         LocalDate graphEndDate = superChatroom.lastDayPlayed()
-                .filter(date -> !date.isAfter(datetimeframe.end))
-                .orElse(datetimeframe.end);
+                .filter(date -> !date.isAfter(datetimeframe.end()))
+                .orElse(datetimeframe.end());
 
         // make graphs
         for (String personName : personScores.keySet()) {
@@ -292,11 +264,5 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         signalDataService.loadAllChatrooms(filename);
 
         this.setupPage();
-    }
-
-    public record DateTimeframe(LocalDate start, LocalDate end) {
-    }
-
-    private record ScoreEntry(LocalDate date, int score) {
     }
 }
