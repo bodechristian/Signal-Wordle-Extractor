@@ -1,7 +1,10 @@
 package com.example.Signal.views;
 
+import com.example.Signal.components.AllMessagesSection;
+import com.example.Signal.components.ChatroomSelector;
 import com.example.Signal.components.MessagesAccordionRow;
 import com.example.Signal.components.ScoreHistogram;
+import com.example.Signal.components.StatisticsPanel;
 import com.example.Signal.models.ChatroomData;
 import com.example.Signal.models.ChatroomMember;
 import com.example.Signal.models.ChatroomMessage;
@@ -12,15 +15,10 @@ import com.example.Signal.services.DataStructureService;
 import com.example.Signal.services.SignalDataService;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Location;
@@ -48,19 +46,10 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     DataRepository dataRepository;
     DataStructureService dataStructureService;
 
-    HorizontalLayout contentHeader;
+    ChatroomSelector chatroomSelector;
     VerticalLayout contentContainer;
-
-    VerticalLayout statisticsPanel;
-    Accordion allMessagesAccordion;
-    Accordion accordionAllMessages;
-    MultiSelectComboBox<ChatroomData> multiselectChats;
-    HorizontalLayout hlEvaluation;
-    Select<EvaluationTimeframe> selectTimeframe;
-    DatePicker datePickerFrom;
-    DatePicker datePickerTo;
-    HorizontalLayout hlCustomDateRange;
-    Button btnLoadMore;
+    StatisticsPanel statisticsPanel;
+    AllMessagesSection allMessagesSection;
 
     private String filename;
     private int chunkidx = 0;
@@ -72,114 +61,37 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         this.dataRepository = dataRepository;
         this.dataStructureService = dataStructureService;
 
-        this.add(new H1("Overview"));
-
-        // Header
-        contentHeader = new HorizontalLayout();
-        multiselectChats = new MultiSelectComboBox<>();
-        multiselectChats.setLabel("Select conversations");
-        multiselectChats.setItemLabelGenerator(ChatroomData::name);
-        multiselectChats.addValueChangeListener(event -> {
-            if (event.isFromClient()) {
-                dataStructureService.changeActiveChatrooms(event.getValue());
-                this.updatePage();
-            } // ignore programmatic changes
+        chatroomSelector = new ChatroomSelector(chatrooms -> {
+            dataStructureService.changeActiveChatrooms(chatrooms);
+            updatePage();
         });
-        contentHeader.add(multiselectChats);
 
-        // Content
         contentContainer = new VerticalLayout();
         contentContainer.addClassNames("chat-container");
 
-        statisticsPanel = new VerticalLayout();
-        statisticsPanel.setPadding(false);
-        statisticsPanel.setSpacing(true);
-        statisticsPanel.addClassName("statistics-panel");
-
-        H2 statisticsHeadline = new H2("Statistics");
-        statisticsHeadline.addClassName("statistics-headline");
-
-        selectTimeframe = new Select<>();
-        selectTimeframe.setLabel("Timeframe");
-        selectTimeframe.setItems(EvaluationTimeframe.values());
-        selectTimeframe.setValue(EvaluationTimeframe.ALL_TIME);
-        selectTimeframe.addValueChangeListener(event -> {
-            if (event.isFromClient()) {
-                updateCustomDateRangeVisibility();
-                this.updateEvaluation();
-            } // ignore programmatic changes
+        statisticsPanel = new StatisticsPanel(this::updateEvaluation);
+        allMessagesSection = new AllMessagesSection(() -> {
+            addAccordionMessages();
+            updateLoadMoreButton();
         });
-        selectTimeframe.setWidth("200px");
 
-        // Custom date range pickers
-        datePickerFrom = new DatePicker("From");
-        datePickerFrom.setValue(LocalDate.now().minusDays(30));
-        datePickerFrom.addValueChangeListener(event -> {
-            if (event.isFromClient()) {
-                this.updateEvaluation();
-            }
-        });
-        datePickerFrom.setWidth("150px");
+        contentContainer.add(statisticsPanel, allMessagesSection);
 
-        datePickerTo = new DatePicker("To");
-        datePickerTo.setValue(LocalDate.now());
-        datePickerTo.addValueChangeListener(event -> {
-            if (event.isFromClient()) {
-                this.updateEvaluation();
-            }
-        });
-        datePickerTo.setWidth("150px");
-
-        hlCustomDateRange = new HorizontalLayout(datePickerFrom, datePickerTo);
-        hlCustomDateRange.setVisible(false);
-        hlCustomDateRange.setSpacing(true);
-
-        // Histograms container
-        hlEvaluation = new HorizontalLayout();
-        hlEvaluation.addClassName("evaluation-container");
-        hlEvaluation.setWidth("100%");
-
-        statisticsPanel.add(statisticsHeadline, selectTimeframe, hlCustomDateRange, hlEvaluation);
-
-        accordionAllMessages = new Accordion();
-        accordionAllMessages.addClassName("daily-messages-accordion");
-
-        btnLoadMore = new Button("Load More");
-        btnLoadMore.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        btnLoadMore.addClickListener(e -> {
-            this.addAccordionMessages();
-            this.updateLoadMoreButton();
-        });
-        HorizontalLayout hlLoadMore = new HorizontalLayout(btnLoadMore);
-        hlLoadMore.addClassName("load-more-container");
-
-        VerticalLayout messagesWithButton = new VerticalLayout();
-        messagesWithButton.setPadding(false);
-        messagesWithButton.setSpacing(false);
-        messagesWithButton.add(accordionAllMessages, hlLoadMore);
-
-        allMessagesAccordion = new Accordion();
-        allMessagesAccordion.addClassName("all-messages-wrapper");
-        allMessagesAccordion.add("All Messages", messagesWithButton);
-
-        contentContainer.add(statisticsPanel, allMessagesAccordion);
-
-        this.add(contentHeader, contentContainer);
+        add(new H1("Overview"), chatroomSelector, contentContainer);
     }
 
     private void updateMultiselectGroups() {
-        multiselectChats.setValue(dataRepository.getActiveChatrooms());
+        chatroomSelector.getMultiselectChats().setValue(dataRepository.getActiveChatrooms());
     }
 
     private void addAccordionMessages() {
-        Map<String, List<MessageTuple>> dailyGames = this.getNextChunkAccordionMessages();
+        Map<String, List<MessageTuple>> dailyGames = getNextChunkAccordionMessages();
 
-        // Sort by date (most recent first) before adding to accordion
         dailyGames.entrySet()
                 .stream()
                 .sorted((e1, e2) -> LocalDate.parse(e2.getKey()).compareTo(LocalDate.parse(e1.getKey())))
-                .forEach(entry -> this.accordionAllMessages.add(entry.getKey(),
-                                                                new MessagesAccordionRow(entry.getValue())));
+                .forEach(entry -> allMessagesSection.getDailyMessagesAccordion()
+                        .add(entry.getKey(), new MessagesAccordionRow(entry.getValue())));
     }
 
     private Map<String, List<MessageTuple>> getNextChunkAccordionMessages() {
@@ -213,10 +125,11 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void updateAccordionAllMessages() {
-        accordionAllMessages.getChildren().forEach(accordionAllMessages::remove);
-        this.chunkidx = 0;
-        this.addAccordionMessages();
-        this.updateLoadMoreButton();
+        Accordion dailyAccordion = allMessagesSection.getDailyMessagesAccordion();
+        dailyAccordion.getChildren().forEach(dailyAccordion::remove);
+        chunkidx = 0;
+        addAccordionMessages();
+        updateLoadMoreButton();
     }
 
     private boolean hasMoreMessages() {
@@ -230,59 +143,58 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void updateLoadMoreButton() {
-        // Update button text and state based on whether more messages exist
+        Button loadMoreBtn = allMessagesSection.getBtnLoadMore();
         if (hasMoreMessages()) {
-            btnLoadMore.setEnabled(true);
-            btnLoadMore.setText("Load More");
+            loadMoreBtn.setEnabled(true);
+            loadMoreBtn.setText("Load More");
         } else {
-            btnLoadMore.setEnabled(false);
-            btnLoadMore.setText("No More Messages");
+            loadMoreBtn.setEnabled(false);
+            loadMoreBtn.setText("No More Messages");
         }
     }
 
     private void setupPage() {
-        multiselectChats.setItems(dataRepository.getAllChatrooms());
+        List<ChatroomData> allChatrooms = dataRepository.getAllChatrooms();
 
-        updatePage();
+        chatroomSelector.getMultiselectChats().setItems(allChatrooms);
+
+        List<ChatroomData> activeChatrooms = dataRepository.getActiveChatrooms();
+        if (!activeChatrooms.isEmpty()) {
+            chatroomSelector.getMultiselectChats().setValue(activeChatrooms);
+        }
+
+        updateEvaluation();
+        updateAccordionAllMessages();
+        updateLoadMoreButton();
     }
 
     private void updatePage() {
-        this.updateMultiselectGroups();
-        this.updateEvaluation();
-        this.updateAccordionAllMessages();
+        updateMultiselectGroups();
+        updateEvaluation();
+        updateAccordionAllMessages();
     }
 
-    /**
-     * Aggregates Wordle scores by person from the super-chatroom within the specified timeframe.
-     * Since we use a super-chatroom, each person's score is only counted once per day,
-     * even if they posted it in multiple chats.
-     *
-     * @param timeframe The timeframe enum value to filter messages
-     * @return Map of person name to their list of scores
-     */
     private Map<String, List<Integer>> aggregateScoresByPerson(EvaluationTimeframe timeframe) {
         Map<String, List<Integer>> personScores = new HashMap<>();
 
         ChatroomData superChatroom = dataRepository.getSuperChatroom();
         if (superChatroom == null) {
-            return personScores; // No active chatrooms
+            return personScores;
         }
 
-        // Determine cutoff date
         LocalDate cutoffDate;
         LocalDate endDate = LocalDate.now();
 
         if (timeframe.isCustomRange()) {
-            cutoffDate = datePickerFrom.getValue();
-            endDate = datePickerTo.getValue();
+            cutoffDate = statisticsPanel.getDatePickerFrom().getValue();
+            endDate = statisticsPanel.getDatePickerTo().getValue();
             if (cutoffDate == null || endDate == null) {
-                return personScores; // Empty map if dates not set
+                return personScores;
             }
         } else {
             cutoffDate = timeframe.getCutoffDate();
         }
 
-        // Iterate through the deduplicated super-chatroom
         for (ChatroomMember member : superChatroom.members()) {
             String personName = member.getName();
             Map<LocalDate, ChatroomMessage> messages = member.getMessages();
@@ -291,13 +203,12 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                 LocalDate messageDate = entry.getKey();
                 ChatroomMessage message = entry.getValue();
 
-                // Filter by timeframe
                 if (messageDate.isBefore(cutoffDate) || messageDate.isAfter(endDate)) {
                     continue;
                 }
 
                 int score = parseWordleScore(message.message());
-                if (score != -1) { // Valid score
+                if (score != -1) {
                     personScores.computeIfAbsent(personName, k -> new ArrayList<>()).add(score);
                 }
             }
@@ -306,18 +217,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         return personScores;
     }
 
-    /**
-     * Updates the visibility of the custom date range pickers based on selected timeframe
-     */
-    private void updateCustomDateRangeVisibility() {
-        EvaluationTimeframe selected = selectTimeframe.getValue();
-        hlCustomDateRange.setVisible(selected != null && selected.isCustomRange());
-    }
-
-    /**
-     * Updates the evaluation section with score histograms for each person
-     */
     private void updateEvaluation() {
+        HorizontalLayout hlEvaluation = statisticsPanel.getHlEvaluation();
         hlEvaluation.removeAll();
 
         if (dataRepository.getActiveChatrooms().isEmpty()) {
@@ -325,7 +226,9 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             return;
         }
 
-        EvaluationTimeframe selectedTimeframe = selectTimeframe.getValue();
+        EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
+        statisticsPanel.getHlCustomDateRange()
+                .setVisible(selectedTimeframe != null && selectedTimeframe.isCustomRange());
         Map<String, List<Integer>> personScores = aggregateScoresByPerson(selectedTimeframe);
 
         if (personScores.isEmpty()) {
@@ -333,7 +236,6 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             return;
         }
 
-        // Create a histogram for each person
         for (Map.Entry<String, List<Integer>> entry : personScores.entrySet()) {
             ScoreHistogram histogram = new ScoreHistogram(entry.getKey(), entry.getValue());
             hlEvaluation.add(histogram);
