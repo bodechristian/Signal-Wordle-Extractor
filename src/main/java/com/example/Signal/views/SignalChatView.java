@@ -177,8 +177,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         updateAccordionAllMessages();
     }
 
-    private <T> Map<String, T> aggregateByPerson(LocalDate start,
-                                                 LocalDate end,
+    private <T> Map<String, T> aggregateByPerson(DateTimeframe timeframe,
                                                  Supplier<T> containerSupplier,
                                                  BiConsumer<T, ScoreEntry> aggregator) {
         Map<String, T> result = new HashMap<>();
@@ -187,7 +186,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             for (Map.Entry<LocalDate, ChatroomMessage> entry : member.messages().entrySet()) {
                 LocalDate messageDate = entry.getKey();
 
-                if (messageDate.isBefore(start) || messageDate.isAfter(end)) {
+                if (messageDate.isBefore(timeframe.start) || messageDate.isAfter(timeframe.end)) {
                     continue;
                 }
 
@@ -202,44 +201,25 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         return result;
     }
 
-    private Map<String, List<Integer>> aggregateScoresByPerson(LocalDate start, LocalDate end) {
-        return aggregateByPerson(
-                start,
-                end,
-                ArrayList::new,
-                (list, entry) -> list.add(entry.score())
-        );
+    private Map<String, List<Integer>> aggregateScoresByPerson(DateTimeframe timeframe) {
+        return aggregateByPerson(timeframe, ArrayList::new, (list, entry) -> list.add(entry.score()));
     }
 
-    private Map<String, Map<LocalDate, Integer>> aggregateTemporalScoresByPerson(LocalDate start, LocalDate end) {
-        return aggregateByPerson(
-                start,
-                end,
-                HashMap::new,
-                (map, entry) -> map.put(entry.date(), entry.score())
-        );
+    private Map<String, Map<LocalDate, Integer>> aggregateTemporalScoresByPerson(DateTimeframe timeframe) {
+        return aggregateByPerson(timeframe, HashMap::new, (map, entry) -> map.put(entry.date(), entry.score()));
     }
 
-    private void updateEvaluation() {
-        HorizontalLayout hlEvaluation = statisticsPanel.getHlEvaluation();
-        hlEvaluation.removeAll();
-
-        if (dataRepository.getActiveChatrooms().isEmpty()) {
-            hlEvaluation.add(new H3("Select conversations to see statistics"));
-            return;
-        }
-
-        EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
+    public DateTimeframe getDateTimeframe() {
         final LocalDate cutoffDate;
         final LocalDate endDate;
+        EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
 
         if (selectedTimeframe != null && selectedTimeframe.isCustomRange()) {
             statisticsPanel.getHlCustomDateRange().setVisible(true);
             cutoffDate = statisticsPanel.getDatePickerFrom().getValue();
             endDate = statisticsPanel.getDatePickerTo().getValue();
             if (cutoffDate == null || endDate == null) {
-                hlEvaluation.add(new H3("Please select both start and end dates"));
-                return;
+                return null;
             }
         } else if (selectedTimeframe != null) {
             cutoffDate = selectedTimeframe.getCutoffDate();
@@ -248,34 +228,48 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             cutoffDate = LocalDate.MIN;
             endDate = LocalDate.now();
         }
+        return new DateTimeframe(cutoffDate, endDate);
+    }
 
-        Map<String, List<Integer>> personScores = aggregateScoresByPerson(cutoffDate, endDate);
-        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregateTemporalScoresByPerson(cutoffDate, endDate);
+    private void updateEvaluation() {
+        HorizontalLayout hlEvaluation = statisticsPanel.getHlEvaluation();
+        ChatroomData superChatroom = dataRepository.getSuperChatroom();
+        hlEvaluation.removeAll();
 
+        if (superChatroom == null) {
+            hlEvaluation.add(new H3("Select conversations to see statistics"));
+            return;
+        }
+
+        DateTimeframe datetimeframe = getDateTimeframe();
+        if (datetimeframe == null) {
+            hlEvaluation.add(new H3("Please select both start and end dates"));
+            return;
+        }
+
+        Map<String, List<Integer>> personScores = aggregateScoresByPerson(datetimeframe);
+        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregateTemporalScoresByPerson(datetimeframe);
         if (personScores.isEmpty()) {
             hlEvaluation.add(new H3("No Wordle scores found in selected conversations"));
             return;
         }
 
-        ChatroomData superChatroom = dataRepository.getSuperChatroom();
-
+        // Graph x-axis should not show 30/All-time days if only the last 5 days have been played - then show 5
         LocalDate graphStartDate = superChatroom.firstDayPlayed()
-                .filter(date -> !date.isBefore(cutoffDate))
-                .orElse(cutoffDate);
+                .filter(date -> !date.isBefore(datetimeframe.start))
+                .orElse(datetimeframe.start);
+        LocalDate graphEndDate = superChatroom.lastDayPlayed()
+                .filter(date -> !date.isAfter(datetimeframe.end))
+                .orElse(datetimeframe.end);
 
-        LocalDate graphEndDate = superChatroom.lastDayPlayed().filter(date -> !date.isAfter(endDate)).orElse(endDate);
-
+        // make graphs
         for (String personName : personScores.keySet()) {
             ScoreHistogram histogram = new ScoreHistogram(personName, personScores.get(personName));
-            hlEvaluation.add(histogram);
-
-            if (personTemporalScores.containsKey(personName)) {
-                TemporalScoreGraph temporalGraph = new TemporalScoreGraph(personName,
-                                                                          personTemporalScores.get(personName),
-                                                                          graphStartDate,
-                                                                          graphEndDate);
-                hlEvaluation.add(temporalGraph);
-            }
+            TemporalScoreGraph temporalGraph = new TemporalScoreGraph(personName,
+                                                                      personTemporalScores.get(personName),
+                                                                      graphStartDate,
+                                                                      graphEndDate);
+            hlEvaluation.add(histogram, temporalGraph);
         }
     }
 
@@ -300,6 +294,9 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         this.setupPage();
     }
 
-    private record ScoreEntry(LocalDate date, int score) {}
+    public record DateTimeframe(LocalDate start, LocalDate end) {
+    }
 
+    private record ScoreEntry(LocalDate date, int score) {
+    }
 }
