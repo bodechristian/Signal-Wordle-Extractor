@@ -1,5 +1,6 @@
 package com.example.Signal.components;
 
+import com.example.Signal.models.DateTimeframe;
 import com.example.Signal.models.EvaluationTimeframe;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -109,6 +110,33 @@ public class StatisticsPanel extends VerticalLayout {
     public void clearChildren() {
         hlHistograms.removeAll();
         hlTemporalCharts.removeAll();
+    }
+
+    /**
+     * Gets the current date/timeframe based on selected controls.
+     * Converts UI state (timeframe selector, date pickers) into a DateTimeframe model object.
+     *
+     * @return DateTimeframe representing the selected date range, or null if custom range is incomplete
+     */
+    public DateTimeframe getDateTimeframe() {
+        EvaluationTimeframe selectedTimeframe = selectTimeframe.getValue();
+        final LocalDate cutoffDate;
+        final LocalDate endDate;
+
+        if (selectedTimeframe != null && selectedTimeframe.isCustomRange()) {
+            cutoffDate = datePickerFrom.getValue();
+            endDate = datePickerTo.getValue();
+            if (cutoffDate == null || endDate == null) {
+                return null;
+            }
+        } else if (selectedTimeframe != null) {
+            cutoffDate = selectedTimeframe.getCutoffDate();
+            endDate = LocalDate.now();
+        } else {
+            cutoffDate = LocalDate.MIN;
+            endDate = LocalDate.now();
+        }
+        return new DateTimeframe(cutoffDate, endDate);
     }
 
     private void updateWrapMode(boolean wrap) {

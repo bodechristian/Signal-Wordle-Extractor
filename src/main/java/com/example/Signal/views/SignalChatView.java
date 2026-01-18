@@ -180,26 +180,6 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         updateAccordionAllMessages();
     }
 
-    public DateTimeframe getDateTimeframe(EvaluationTimeframe selectedTimeframe) {
-        final LocalDate cutoffDate;
-        final LocalDate endDate;
-
-        if (selectedTimeframe != null && selectedTimeframe.isCustomRange()) {
-            cutoffDate = statisticsPanel.getDatePickerFrom().getValue();
-            endDate = statisticsPanel.getDatePickerTo().getValue();
-            if (cutoffDate == null || endDate == null) {
-                return null;
-            }
-        } else if (selectedTimeframe != null) {
-            cutoffDate = selectedTimeframe.getCutoffDate();
-            endDate = LocalDate.now();
-        } else {
-            cutoffDate = LocalDate.MIN;
-            endDate = LocalDate.now();
-        }
-        return new DateTimeframe(cutoffDate, endDate);
-    }
-
     private void updateEvaluation() {
         HorizontalLayout hlHistograms = statisticsPanel.getHlHistograms();
         ChatroomData superChatroom = dataRepository.getSuperChatroom();
@@ -214,7 +194,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             return;
         }
 
-        DateTimeframe datetimeframe = getDateTimeframe(selectedTimeframe);
+        DateTimeframe datetimeframe = statisticsPanel.getDateTimeframe();
         if (datetimeframe == null) {
             hlHistograms.add(new H3("Please select both start and end dates"));
             return;

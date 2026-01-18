@@ -84,30 +84,24 @@ public class DragAndDropUtil {
             });
 
             // Handle the drop
-            dropTarget.addDropListener(event -> {
-                event.getDragSourceComponent().ifPresent(dragged -> {
-                    // Remove all indicators
-                    container.getChildren().forEach(c -> {
-                        c.removeClassName("drop-indicator-left");
-                        c.removeClassName("drop-indicator-right");
-                    });
-
-                    // Get current positions
-                    int draggedIndex = container.indexOf(dragged);
-                    int dropIndex = container.indexOf(component);
-
-                    if (draggedIndex != -1 && dropIndex != -1 && draggedIndex != dropIndex) {
-                        // Remove dragged component
-                        container.remove(dragged);
-
-                        // Calculate new position (adjust if dragging from left to right)
-                        int newIndex = draggedIndex < dropIndex ? dropIndex : dropIndex;
-
-                        // Re-insert at new position
-                        container.addComponentAtIndex(newIndex, dragged);
-                    }
+            dropTarget.addDropListener(event -> event.getDragSourceComponent().ifPresent(dragged -> {
+                // Remove all indicators
+                container.getChildren().forEach(c -> {
+                    c.removeClassName("drop-indicator-left");
+                    c.removeClassName("drop-indicator-right");
                 });
-            });
+
+                // Get current positions
+                int draggedIndex = container.indexOf(dragged);
+                int dropIndex = container.indexOf(component);
+
+                if (draggedIndex != -1 && dropIndex != -1 && draggedIndex != dropIndex) {
+                    // Remove dragged component
+                    container.remove(dragged);
+                    // Re-insert at new position
+                    container.addComponentAtIndex(dropIndex, dragged);
+                }
+            }));
         });
     }
 }
