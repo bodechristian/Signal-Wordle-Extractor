@@ -19,7 +19,8 @@ public class StatisticsPanel extends VerticalLayout {
     private final DatePicker datePickerFrom;
     private final DatePicker datePickerTo;
     private final HorizontalLayout hlCustomDateRange;
-    private final HorizontalLayout hlEvaluation;
+    private final HorizontalLayout hlHistograms;
+    private final HorizontalLayout hlTemporalCharts;
 
     public StatisticsPanel(Runnable updateEvaluation) {
         setPadding(false);
@@ -79,10 +80,19 @@ public class StatisticsPanel extends VerticalLayout {
         hlCustomDateRange.setVisible(false);
         hlCustomDateRange.setSpacing(true);
 
-        hlEvaluation = new HorizontalLayout();
-        hlEvaluation.addClassName("evaluation-container");
-        hlEvaluation.setWidth("100%");
+        hlHistograms = new HorizontalLayout();
+        hlHistograms.addClassName("histograms-container");
+        hlHistograms.setWidthFull();
 
-        add(headline, timeframeRow, hlCustomDateRange, hlEvaluation);
+        hlTemporalCharts = new HorizontalLayout();
+        hlTemporalCharts.addClassName("temporal-charts-container");
+        hlTemporalCharts.setWidthFull();
+
+        add(headline, timeframeRow, hlCustomDateRange, hlHistograms, hlTemporalCharts);
+    }
+
+    public void clearChildren() {
+        hlHistograms.removeAll();
+        hlTemporalCharts.removeAll();
     }
 }

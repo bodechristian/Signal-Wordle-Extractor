@@ -433,7 +433,7 @@ vaadin-accordion-heading {
   white-space: nowrap;
 }
 
-.evaluation-container {
+.temporal-charts-container, .histograms-container {
   overflow-x: auto;
   overflow-y: visible;
   gap: 20px;
@@ -444,18 +444,18 @@ vaadin-accordion-heading {
   justify-content: flex-start;
   /* Custom scrollbar styling */
 }
-.evaluation-container::-webkit-scrollbar {
+.temporal-charts-container::-webkit-scrollbar, .histograms-container::-webkit-scrollbar {
   height: 8px;
 }
-.evaluation-container::-webkit-scrollbar-track {
+.temporal-charts-container::-webkit-scrollbar-track, .histograms-container::-webkit-scrollbar-track {
   background: var(--color-background-subtle);
   border-radius: 4px;
 }
-.evaluation-container::-webkit-scrollbar-thumb {
+.temporal-charts-container::-webkit-scrollbar-thumb, .histograms-container::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 4px;
 }
-.evaluation-container::-webkit-scrollbar-thumb:hover {
+.temporal-charts-container::-webkit-scrollbar-thumb:hover, .histograms-container::-webkit-scrollbar-thumb:hover {
   background: #bdbdbd;
 }
 

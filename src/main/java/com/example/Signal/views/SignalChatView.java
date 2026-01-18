@@ -200,22 +200,22 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void updateEvaluation() {
-        HorizontalLayout hlEvaluation = statisticsPanel.getHlEvaluation();
+        HorizontalLayout hlHistograms = statisticsPanel.getHlHistograms();
         ChatroomData superChatroom = dataRepository.getSuperChatroom();
         EvaluationTimeframe selectedTimeframe = statisticsPanel.getSelectTimeframe().getValue();
-        hlEvaluation.removeAll();
+        statisticsPanel.clearChildren();
 
         statisticsPanel.getHlCustomDateRange()
                 .setVisible(selectedTimeframe != null && selectedTimeframe.isCustomRange());
 
         if (superChatroom == null) {
-            hlEvaluation.add(new H3("Select conversations to see statistics"));
+            hlHistograms.add(new H3("Select conversations to see statistics"));
             return;
         }
 
         DateTimeframe datetimeframe = getDateTimeframe(selectedTimeframe);
         if (datetimeframe == null) {
-            hlEvaluation.add(new H3("Please select both start and end dates"));
+            hlHistograms.add(new H3("Please select both start and end dates"));
             return;
         }
 
@@ -223,7 +223,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregationService.aggregateTemporalScoresByPerson(
                 datetimeframe);
         if (personScores.isEmpty()) {
-            hlEvaluation.add(new H3("No Wordle scores found in selected conversations"));
+            hlHistograms.add(new H3("No Wordle scores found in selected conversations"));
             return;
         }
 
@@ -244,7 +244,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                                                                       graphEndDate,
                                                                       statisticsPanel.getRollingAverageWindowField()
                                                                               .getValue());
-            hlEvaluation.add(histogram, temporalGraph);
+            hlHistograms.add(histogram);
+            statisticsPanel.getHlTemporalCharts().add(temporalGraph);
         }
     }
 
