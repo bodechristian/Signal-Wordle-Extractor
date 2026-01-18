@@ -16,6 +16,7 @@ import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.services.AggregationService;
 import com.example.Signal.services.DataStructureService;
 import com.example.Signal.services.SignalDataService;
+import com.example.Signal.utils.DragAndDropUtil;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
@@ -247,6 +248,10 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             hlHistograms.add(histogram);
             statisticsPanel.getHlTemporalCharts().add(temporalGraph);
         }
+        
+        // Enable drag-and-drop for reordering
+        DragAndDropUtil.enableReordering(hlHistograms);
+        DragAndDropUtil.enableReordering(statisticsPanel.getHlTemporalCharts());
     }
 
     private void saveQueryParameters(BeforeEvent beforeEvent) {

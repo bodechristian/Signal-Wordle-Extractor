@@ -243,6 +243,11 @@ vaadin-accordion-heading {
   gap: 0;
   box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
   
   &:hover {
     box-shadow: var(--shadow-hover);
@@ -362,6 +367,11 @@ vaadin-accordion-heading {
   gap: 0;
   box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
   
   &:hover {
     box-shadow: var(--shadow-hover);
@@ -521,7 +531,7 @@ vaadin-accordion-heading {
   overflow-x: auto;
   overflow-y: visible;
   gap: 20px;
-  padding: 4px 0 0 0;
+  padding: 4px 12px 0 12px;
   max-width: 100%;
   width: 100%;
   flex-wrap: nowrap;
@@ -555,7 +565,7 @@ vaadin-accordion-heading {
 
 /* Evaluation separator styling */
 .evaluation-separator {
-  margin: 1px 0;
+  margin: 20px 0;
   border: none;
   height: 1px;
   background: linear-gradient(
@@ -565,6 +575,58 @@ vaadin-accordion-heading {
     var(--color-border) 90%,
     transparent 100%
   );
+}
+
+/* Drag and drop indicators */
+.dragging {
+  opacity: 0.5;
+}
+
+.drop-indicator-left {
+  position: relative;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    left: -14px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(25, 118, 210, 0.5);
+    animation: pulse-indicator 0.8s ease-in-out infinite;
+    z-index: 10;
+  }
+}
+
+.drop-indicator-right {
+  position: relative;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    right: -14px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(25, 118, 210, 0.5);
+    animation: pulse-indicator 0.8s ease-in-out infinite;
+    z-index: 10;
+  }
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scaleY(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 .load-more-container {

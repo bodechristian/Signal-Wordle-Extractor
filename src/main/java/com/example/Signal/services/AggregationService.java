@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import static com.example.Signal.Utils.parseWordleScore;
+import static com.example.Signal.utils.Utils.parseWordleScore;
 
 @Service
 @RequiredArgsConstructor

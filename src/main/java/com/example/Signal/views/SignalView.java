@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.example.Signal.Utils.inMB;
-import static com.example.Signal.Utils.writeToFile;
+import static com.example.Signal.utils.Utils.inMB;
+import static com.example.Signal.utils.Utils.writeToFile;
 
 @Slf4j
 @Route("/signal")

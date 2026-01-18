@@ -1,10 +1,10 @@
 package com.example.Signal.services;
 
-import com.example.Signal.CommandExecutor;
 import com.example.Signal.models.ChatroomDataSignal;
 import com.example.Signal.models.ChatroomMessage;
 import com.example.Signal.repositories.DataRepository;
 import com.example.Signal.repositories.SQLiteRepository;
+import com.example.Signal.utils.CommandExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.Signal.Utils.PATHTODBS;
+import static com.example.Signal.utils.Utils.PATHTODBS;
 
 @Slf4j
 @Service

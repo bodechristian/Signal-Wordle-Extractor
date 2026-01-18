@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.Signal.Utils.PATHTODBS;
+import static com.example.Signal.utils.Utils.PATHTODBS;
 
 @Slf4j
 @Getter
