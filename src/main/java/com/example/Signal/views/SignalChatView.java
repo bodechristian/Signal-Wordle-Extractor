@@ -241,12 +241,9 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
     }
 
     private void setupPage() {
-        List<ChatroomData> allChatrooms = dataRepository.getAllChatrooms();
+        multiselectChats.setItems(dataRepository.getAllChatrooms());
 
-        multiselectChats.setItems(allChatrooms);
-
-        updateEvaluation();
-        updateLoadMoreButton();
+        updatePage();
     }
 
     private void updatePage() {
