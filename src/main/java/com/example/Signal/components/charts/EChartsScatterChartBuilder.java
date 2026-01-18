@@ -6,14 +6,6 @@ import java.util.Map;
 
 public class EChartsScatterChartBuilder {
 
-    private static final Map<Integer, String> SCORE_COLORS = Map.ofEntries(Map.entry(1, "#00d66a"),
-                                                                           Map.entry(2, "#4cd964"),
-                                                                           Map.entry(3, "#a8e063"),
-                                                                           Map.entry(4, "#ffc857"),
-                                                                           Map.entry(5, "#ff9a3c"),
-                                                                           Map.entry(6, "#ff6b6b"),
-                                                                           Map.entry(7, "#c92a2a"));
-
     private final String chartElementId;
     private final Map<LocalDate, Integer> data;
     private final LocalDate minDate;
@@ -39,7 +31,7 @@ public class EChartsScatterChartBuilder {
                 .toList();
 
         String dataPointsJson = buildDataPointsJson(sortedData);
-        String colorsJson = buildColorsJson(sortedData);
+        String scoresJson = buildScoresJson(sortedData);
         String rollingAverageJson = buildRollingAverageJson(sortedData);
 
         return String.format("""
@@ -47,9 +39,22 @@ public class EChartsScatterChartBuilder {
                                          const chartDom = document.getElementById('%s');
                                          if (!chartDom) return;
                                      
+                                         // Read score colors from CSS variables
+                                         const rootStyles = getComputedStyle(document.documentElement);
+                                         const scoreColors = {
+                                             1: rootStyles.getPropertyValue('--score-1-color').trim(),
+                                             2: rootStyles.getPropertyValue('--score-2-color').trim(),
+                                             3: rootStyles.getPropertyValue('--score-3-color').trim(),
+                                             4: rootStyles.getPropertyValue('--score-4-color').trim(),
+                                             5: rootStyles.getPropertyValue('--score-5-color').trim(),
+                                             6: rootStyles.getPropertyValue('--score-6-color').trim(),
+                                             7: rootStyles.getPropertyValue('--score-7-color').trim()
+                                         };
+                                     
                                          const myChart = echarts.init(chartDom);
                                          const dataPoints = %s;
-                                         const colors = %s;
+                                         const scores = %s;
+                                         const colors = scores.map(score => scoreColors[score]);
                                          const rollingAverage = %s;
                                      
                                          const option = %s;
@@ -68,7 +73,7 @@ public class EChartsScatterChartBuilder {
                                      """,
                              chartElementId,
                              dataPointsJson,
-                             colorsJson,
+                             scoresJson,
                              rollingAverageJson,
                              buildChartOptions());
     }
@@ -88,18 +93,18 @@ public class EChartsScatterChartBuilder {
         return dataPoints.toString();
     }
 
-    private String buildColorsJson(List<Map.Entry<LocalDate, Integer>> sortedData) {
-        StringBuilder colors = new StringBuilder("[");
+    private String buildScoresJson(List<Map.Entry<LocalDate, Integer>> sortedData) {
+        StringBuilder scores = new StringBuilder("[");
 
         for (int i = 0; i < sortedData.size(); i++) {
             if (i > 0) {
-                colors.append(",");
+                scores.append(",");
             }
-            colors.append(String.format("'%s'", SCORE_COLORS.get(sortedData.get(i).getValue())));
+            scores.append(sortedData.get(i).getValue());
         }
 
-        colors.append("]");
-        return colors.toString();
+        scores.append("]");
+        return scores.toString();
     }
 
     private String buildRollingAverageJson(List<Map.Entry<LocalDate, Integer>> sortedData) {

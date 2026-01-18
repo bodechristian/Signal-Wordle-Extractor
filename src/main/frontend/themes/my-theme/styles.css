@@ -13,6 +13,21 @@
   --color-border: #e0e0e0;
   --color-text: #333333;
   --color-text-secondary: #666666;
+  /* Wordle score colors - Single source of truth */
+  --score-1-color: #00d66a;
+  --score-1-color-dark: #00a65a;
+  --score-2-color: #4cd964;
+  --score-2-color-dark: #39b54a;
+  --score-3-color: #a8e063;
+  --score-3-color-dark: #8cc63f;
+  --score-4-color: #ffc857;
+  --score-4-color-dark: #fbb040;
+  --score-5-color: #ff9a3c;
+  --score-5-color-dark: #f7931e;
+  --score-6-color: #ff6b6b;
+  --score-6-color-dark: #ed1c24;
+  --score-7-color: #c92a2a;
+  --score-7-color-dark: #8b0000;
 }
 
 .groupdialog__row {
@@ -265,25 +280,25 @@ vaadin-accordion-heading {
   transform: scaleY(1.05);
 }
 .score-histogram__bar--score-1 {
-  background: linear-gradient(180deg, #00d66a 0%, #00a65a 100%);
+  background: linear-gradient(180deg, var(--score-1-color) 0%, var(--score-1-color-dark) 100%);
 }
 .score-histogram__bar--score-2 {
-  background: linear-gradient(180deg, #4cd964 0%, #39b54a 100%);
+  background: linear-gradient(180deg, var(--score-2-color) 0%, var(--score-2-color-dark) 100%);
 }
 .score-histogram__bar--score-3 {
-  background: linear-gradient(180deg, #a8e063 0%, #8cc63f 100%);
+  background: linear-gradient(180deg, var(--score-3-color) 0%, var(--score-3-color-dark) 100%);
 }
 .score-histogram__bar--score-4 {
-  background: linear-gradient(180deg, #ffc857 0%, #fbb040 100%);
+  background: linear-gradient(180deg, var(--score-4-color) 0%, var(--score-4-color-dark) 100%);
 }
 .score-histogram__bar--score-5 {
-  background: linear-gradient(180deg, #ff9a3c 0%, #f7931e 100%);
+  background: linear-gradient(180deg, var(--score-5-color) 0%, var(--score-5-color-dark) 100%);
 }
 .score-histogram__bar--score-6 {
-  background: linear-gradient(180deg, #ff6b6b 0%, #ed1c24 100%);
+  background: linear-gradient(180deg, var(--score-6-color) 0%, var(--score-6-color-dark) 100%);
 }
 .score-histogram__bar--score-7 {
-  background: linear-gradient(180deg, #c92a2a 0%, #8b0000 100%);
+  background: linear-gradient(180deg, var(--score-7-color) 0%, var(--score-7-color-dark) 100%);
 }
 .score-histogram__x-label {
   font-size: 13px;
@@ -397,25 +412,25 @@ vaadin-accordion-heading {
   z-index: 3;
 }
 .temporal-score-graph__point--score-1 {
-  background: #00d66a;
+  background: var(--score-1-color);
 }
 .temporal-score-graph__point--score-2 {
-  background: #4cd964;
+  background: var(--score-2-color);
 }
 .temporal-score-graph__point--score-3 {
-  background: #a8e063;
+  background: var(--score-3-color);
 }
 .temporal-score-graph__point--score-4 {
-  background: #ffc857;
+  background: var(--score-4-color);
 }
 .temporal-score-graph__point--score-5 {
-  background: #ff9a3c;
+  background: var(--score-5-color);
 }
 .temporal-score-graph__point--score-6 {
-  background: #ff6b6b;
+  background: var(--score-6-color);
 }
 .temporal-score-graph__point--score-7 {
-  background: #c92a2a;
+  background: var(--score-7-color);
 }
 .temporal-score-graph__x-axis-container {
   display: flex;
