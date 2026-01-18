@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class StatisticsPanel extends VerticalLayout {
 
     private final Select<EvaluationTimeframe> selectTimeframe;
+    private final Select<Integer> selectRollingAverageWindow;
     private final DatePicker datePickerFrom;
     private final DatePicker datePickerTo;
     private final HorizontalLayout hlCustomDateRange;
@@ -37,6 +38,21 @@ public class StatisticsPanel extends VerticalLayout {
             }
         });
         selectTimeframe.setWidth("200px");
+
+        selectRollingAverageWindow = new Select<>();
+        selectRollingAverageWindow.setLabel("Rolling Average");
+        selectRollingAverageWindow.setItems(3, 5, 7, 10, 14);
+        selectRollingAverageWindow.setValue(7);
+        selectRollingAverageWindow.addValueChangeListener(event -> {
+            if (event.isFromClient()) {
+                updateEvaluation.run();
+            }
+        });
+        selectRollingAverageWindow.setWidth("150px");
+
+        HorizontalLayout timeframeRow = new HorizontalLayout(selectTimeframe, selectRollingAverageWindow);
+        timeframeRow.setSpacing(true);
+        timeframeRow.setAlignItems(Alignment.END);
 
         datePickerFrom = new DatePicker("From");
         datePickerFrom.setValue(LocalDate.now().minusDays(30));
@@ -64,6 +80,6 @@ public class StatisticsPanel extends VerticalLayout {
         hlEvaluation.addClassName("evaluation-container");
         hlEvaluation.setWidth("100%");
 
-        add(headline, selectTimeframe, hlCustomDateRange, hlEvaluation);
+        add(headline, timeframeRow, hlCustomDateRange, hlEvaluation);
     }
 }

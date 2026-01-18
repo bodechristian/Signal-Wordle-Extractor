@@ -18,15 +18,18 @@ public class EChartsScatterChartBuilder {
     private final Map<LocalDate, Integer> data;
     private final LocalDate minDate;
     private final LocalDate maxDate;
+    private final int rollingAverageWindow;
 
     public EChartsScatterChartBuilder(String chartElementId,
                                       Map<LocalDate, Integer> data,
                                       LocalDate minDate,
-                                      LocalDate maxDate) {
+                                      LocalDate maxDate,
+                                      int rollingAverageWindow) {
         this.chartElementId = chartElementId;
         this.data = data;
         this.minDate = minDate;
         this.maxDate = maxDate;
+        this.rollingAverageWindow = rollingAverageWindow;
     }
 
     public String buildScript() {
@@ -37,6 +40,7 @@ public class EChartsScatterChartBuilder {
 
         String dataPointsJson = buildDataPointsJson(sortedData);
         String colorsJson = buildColorsJson(sortedData);
+        String rollingAverageJson = buildRollingAverageJson(sortedData);
 
         return String.format("""
                                      (function() {
@@ -46,6 +50,7 @@ public class EChartsScatterChartBuilder {
                                          const myChart = echarts.init(chartDom);
                                          const dataPoints = %s;
                                          const colors = %s;
+                                         const rollingAverage = %s;
                                      
                                          const option = %s;
                                      
@@ -55,7 +60,7 @@ public class EChartsScatterChartBuilder {
                                              myChart.resize();
                                          });
                                      })();
-                                     """, chartElementId, dataPointsJson, colorsJson, buildChartOptions());
+                                     """, chartElementId, dataPointsJson, colorsJson, rollingAverageJson, buildChartOptions());
     }
 
     private String buildDataPointsJson(List<Map.Entry<LocalDate, Integer>> sortedData) {
@@ -87,12 +92,58 @@ public class EChartsScatterChartBuilder {
         return colors.toString();
     }
 
+    private String buildRollingAverageJson(List<Map.Entry<LocalDate, Integer>> sortedData) {
+        if (sortedData.size() < rollingAverageWindow) {
+            return "[]";
+        }
+
+        StringBuilder rollingAverage = new StringBuilder("[");
+        boolean first = true;
+
+        for (int i = 0; i < sortedData.size(); i++) {
+            int windowStart = Math.max(0, i - rollingAverageWindow + 1);
+            int windowEnd = i + 1;
+            
+            double sum = 0;
+            int count = 0;
+            
+            for (int j = windowStart; j < windowEnd; j++) {
+                int score = sortedData.get(j).getValue();
+                if (score != 7) {
+                    sum += score;
+                    count++;
+                } else {
+                    sum += 7;
+                    count++;
+                }
+            }
+            
+            if (count >= rollingAverageWindow) {
+                double average = sum / count;
+                LocalDate date = sortedData.get(i).getKey();
+                
+                if (!first) {
+                    rollingAverage.append(",");
+                }
+                rollingAverage.append(String.format("['%s', %.2f]", date.toString(), average));
+                first = false;
+            }
+        }
+
+        rollingAverage.append("]");
+        return rollingAverage.toString();
+    }
+
     private String buildChartOptions() {
         return String.format("""
                                      {
                                          tooltip: {
                                              trigger: 'item',
                                              formatter: function(params) {
+                                                 if (params.seriesName === '%d-Game Rolling Average') {
+                                                     const date = new Date(params.value[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                                     return date + '<br/>Avg: ' + params.value[1].toFixed(2);
+                                                 }
                                                  const score = params.value[1] === 7 ? 'X' : params.value[1];
                                                  const date = new Date(params.value[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                                                  return date + '<br/>Score: ' + score;
@@ -105,30 +156,19 @@ public class EChartsScatterChartBuilder {
                                              bottom: '50px',
                                              containLabel: true
                                          },
-                                         xAxis: {
-                                             type: 'time',
-                                             min: '%s',
-                                             max: '%s',
-                                             splitNumber: 5,
-                                             axisLine: {
-                                                 show: true
-                                             },
-                                             axisTick: {
-                                                 show: true
-                                             },
-                                             axisLabel: {
-                                                 show: true,
-                                                 formatter: function(value) {
-                                                     const date = new Date(value);
-                                                     const month = date.toLocaleDateString('en-US', { month: 'short' });
-                                                     const day = date.getDate();
-                                                     return month + ' ' + day;
-                                                 },
-                                                 interval: 0,
-                                                 fontSize: 11,
-                                                 color: '#666'
-                                             }
-                                         },
+                                          xAxis: {
+                                              type: 'time',
+                                              min: '%s',
+                                              max: '%s',
+                                              axisLabel: {
+                                                  formatter: function(value) {
+                                                      const date = new Date(value);
+                                                      const month = date.toLocaleDateString('en-US', { month: 'short' });
+                                                      const day = date.getDate();
+                                                      return month + ' ' + day;
+                                                  }
+                                              }
+                                          },
                                          yAxis: {
                                              type: 'value',
                                              inverse: true,
@@ -147,18 +187,34 @@ public class EChartsScatterChartBuilder {
                                                  }
                                              }
                                          },
-                                         series: [{
-                                             name: 'Score',
-                                             type: 'scatter',
-                                             data: dataPoints,
-                                             itemStyle: {
-                                                 color: function(params) {
-                                                     return colors[params.dataIndex];
-                                                 }
-                                             },
-                                             symbolSize: 10
-                                         }]
-                                     }
-                                     """, minDate.toString(), maxDate.toString());
+                                          series: [{
+                                              name: 'Score',
+                                              type: 'scatter',
+                                              data: dataPoints,
+                                              itemStyle: {
+                                                  color: function(params) {
+                                                      return colors[params.dataIndex];
+                                                  }
+                                              },
+                                              symbolSize: 10,
+                                              z: 2
+                                          }, {
+                                              name: '%d-Game Rolling Average',
+                                              type: 'line',
+                                              data: rollingAverage,
+                                              smooth: true,
+                                              lineStyle: {
+                                                  color: '#666',
+                                                  width: 2,
+                                                  type: 'solid'
+                                              },
+                                              itemStyle: {
+                                                  color: '#666'
+                                              },
+                                              showSymbol: false,
+                                              z: 1
+                                          }]
+                                      }
+                                      """, rollingAverageWindow, minDate.toString(), maxDate.toString(), rollingAverageWindow);
     }
 }

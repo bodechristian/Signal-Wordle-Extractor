@@ -220,7 +220,8 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
         }
 
         Map<String, List<Integer>> personScores = aggregationService.aggregateScoresByPerson(datetimeframe);
-        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregationService.aggregateTemporalScoresByPerson(datetimeframe);
+        Map<String, Map<LocalDate, Integer>> personTemporalScores = aggregationService.aggregateTemporalScoresByPerson(
+                datetimeframe);
         if (personScores.isEmpty()) {
             hlEvaluation.add(new H3("No Wordle scores found in selected conversations"));
             return;
@@ -240,7 +241,9 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
             TemporalScoreGraph temporalGraph = new TemporalScoreGraph(personName,
                                                                       personTemporalScores.get(personName),
                                                                       graphStartDate,
-                                                                      graphEndDate);
+                                                                      graphEndDate,
+                                                                      statisticsPanel.getSelectRollingAverageWindow()
+                                                                              .getValue());
             hlEvaluation.add(histogram, temporalGraph);
         }
     }

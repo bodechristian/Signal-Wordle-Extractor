@@ -14,7 +14,8 @@ public class TemporalScoreGraph extends VerticalLayout {
     public TemporalScoreGraph(String personName,
                               Map<LocalDate, Integer> scoresOverTime,
                               LocalDate globalStartDate,
-                              LocalDate globalEndDate) {
+                              LocalDate globalEndDate,
+                              int rollingAverageWindow) {
         addClassName("temporal-score-graph");
         setPadding(true);
         setSpacing(true);
@@ -26,7 +27,7 @@ public class TemporalScoreGraph extends VerticalLayout {
         }
 
         add(createStatsSpan(personName, scoresOverTime));
-        add(createChartDiv(scoresOverTime, globalStartDate, globalEndDate));
+        add(createChartDiv(scoresOverTime, globalStartDate, globalEndDate, rollingAverageWindow));
     }
 
     private Span createStatsSpan(String personName, Map<LocalDate, Integer> scoresOverTime) {
@@ -49,7 +50,8 @@ public class TemporalScoreGraph extends VerticalLayout {
 
     private Div createChartDiv(Map<LocalDate, Integer> scoresOverTime,
                                LocalDate globalStartDate,
-                               LocalDate globalEndDate) {
+                               LocalDate globalEndDate,
+                               int rollingAverageWindow) {
         Div chartDiv = new Div();
         chartDiv.setId("chart-" + UUID.randomUUID());
         chartDiv.setWidth("100%");
@@ -59,7 +61,8 @@ public class TemporalScoreGraph extends VerticalLayout {
                 chartDiv.getId().orElseThrow(),
                 scoresOverTime,
                 globalStartDate,
-                globalEndDate
+                globalEndDate,
+                rollingAverageWindow
         );
 
         chartDiv.getElement().executeJs(chartBuilder.buildScript());
