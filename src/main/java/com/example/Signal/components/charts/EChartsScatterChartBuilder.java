@@ -60,7 +60,12 @@ public class EChartsScatterChartBuilder {
                                              myChart.resize();
                                          });
                                      })();
-                                     """, chartElementId, dataPointsJson, colorsJson, rollingAverageJson, buildChartOptions());
+                                     """,
+                             chartElementId,
+                             dataPointsJson,
+                             colorsJson,
+                             rollingAverageJson,
+                             buildChartOptions());
     }
 
     private String buildDataPointsJson(List<Map.Entry<LocalDate, Integer>> sortedData) {
@@ -103,10 +108,10 @@ public class EChartsScatterChartBuilder {
         for (int i = 0; i < sortedData.size(); i++) {
             int windowStart = Math.max(0, i - rollingAverageWindow + 1);
             int windowEnd = i + 1;
-            
+
             double sum = 0;
             int count = 0;
-            
+
             for (int j = windowStart; j < windowEnd; j++) {
                 int score = sortedData.get(j).getValue();
                 if (score != 7) {
@@ -117,11 +122,11 @@ public class EChartsScatterChartBuilder {
                     count++;
                 }
             }
-            
+
             if (count >= rollingAverageWindow) {
                 double average = sum / count;
                 LocalDate date = sortedData.get(i).getKey();
-                
+
                 if (!first) {
                     rollingAverage.append(",");
                 }
@@ -215,6 +220,10 @@ public class EChartsScatterChartBuilder {
                                               z: 1
                                           }]
                                       }
-                                      """, rollingAverageWindow, minDate.toString(), maxDate.toString(), rollingAverageWindow);
+                                     """,
+                             rollingAverageWindow,
+                             minDate.toString(),
+                             maxDate.toString(),
+                             rollingAverageWindow);
     }
 }

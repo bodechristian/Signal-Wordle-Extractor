@@ -6,6 +6,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -14,7 +15,7 @@ import java.time.LocalDate;
 public class StatisticsPanel extends VerticalLayout {
 
     private final Select<EvaluationTimeframe> selectTimeframe;
-    private final Select<Integer> selectRollingAverageWindow;
+    private final IntegerField rollingAverageWindowField;
     private final DatePicker datePickerFrom;
     private final DatePicker datePickerTo;
     private final HorizontalLayout hlCustomDateRange;
@@ -39,18 +40,20 @@ public class StatisticsPanel extends VerticalLayout {
         });
         selectTimeframe.setWidth("200px");
 
-        selectRollingAverageWindow = new Select<>();
-        selectRollingAverageWindow.setLabel("Rolling Average");
-        selectRollingAverageWindow.setItems(3, 5, 7, 10, 14);
-        selectRollingAverageWindow.setValue(7);
-        selectRollingAverageWindow.addValueChangeListener(event -> {
-            if (event.isFromClient()) {
+        rollingAverageWindowField = new IntegerField();
+        rollingAverageWindowField.setLabel("Rolling Average");
+        rollingAverageWindowField.setValue(7);
+        rollingAverageWindowField.setMin(1);
+        rollingAverageWindowField.setMax(30);
+        rollingAverageWindowField.setStepButtonsVisible(true);
+        rollingAverageWindowField.addValueChangeListener(event -> {
+            if (event.isFromClient() && event.getValue() != null) {
                 updateEvaluation.run();
             }
         });
-        selectRollingAverageWindow.setWidth("150px");
+        rollingAverageWindowField.setWidth("150px");
 
-        HorizontalLayout timeframeRow = new HorizontalLayout(selectTimeframe, selectRollingAverageWindow);
+        HorizontalLayout timeframeRow = new HorizontalLayout(selectTimeframe, rollingAverageWindowField);
         timeframeRow.setSpacing(true);
         timeframeRow.setAlignItems(Alignment.END);
 

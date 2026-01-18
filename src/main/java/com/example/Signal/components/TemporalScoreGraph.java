@@ -39,12 +39,10 @@ public class TemporalScoreGraph extends VerticalLayout {
                 .orElse(0);
 
         Span statsSpan = new Span(String.format("%s - Games: %d | Avg: %.2f",
-                personName,
-                scoresOverTime.size(),
-                avgScore));
-        statsSpan.getStyle()
-                .set("font-weight", "600")
-                .set("margin-bottom", "8px");
+                                                personName,
+                                                scoresOverTime.size(),
+                                                avgScore));
+        statsSpan.getStyle().set("font-weight", "600").set("margin-bottom", "8px");
         return statsSpan;
     }
 
@@ -57,13 +55,11 @@ public class TemporalScoreGraph extends VerticalLayout {
         chartDiv.setWidth("100%");
         chartDiv.setHeight("300px");
 
-        EChartsScatterChartBuilder chartBuilder = new EChartsScatterChartBuilder(
-                chartDiv.getId().orElseThrow(),
-                scoresOverTime,
-                globalStartDate,
-                globalEndDate,
-                rollingAverageWindow
-        );
+        EChartsScatterChartBuilder chartBuilder = new EChartsScatterChartBuilder(chartDiv.getId().orElseThrow(),
+                                                                                 scoresOverTime,
+                                                                                 globalStartDate,
+                                                                                 globalEndDate,
+                                                                                 rollingAverageWindow);
 
         chartDiv.getElement().executeJs(chartBuilder.buildScript());
         return chartDiv;

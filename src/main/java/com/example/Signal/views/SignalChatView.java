@@ -242,7 +242,7 @@ public class SignalChatView extends VerticalLayout implements HasUrlParameter<St
                                                                       personTemporalScores.get(personName),
                                                                       graphStartDate,
                                                                       graphEndDate,
-                                                                      statisticsPanel.getSelectRollingAverageWindow()
+                                                                      statisticsPanel.getRollingAverageWindowField()
                                                                               .getValue());
             hlEvaluation.add(histogram, temporalGraph);
         }
